@@ -3,7 +3,6 @@
  * based on https://codeburst.io/fetch-api-was-bringing-darkness-to-my-codebase-so-i-did-something-to-illuminate-it-7f2d8826e939
  */
 
-
 /**
  * Checks if the response is 'ok'
  * @param {*} response - the response object from a fetch request
@@ -12,7 +11,7 @@
 const checkStatus = response => {
 	if (response.ok) return response;
 	else {
-		const error = new Error(response.statusText);
+		const error = new Error(response.statusText || response.status);
 		error.response = response;
 		throw error;
 	}
