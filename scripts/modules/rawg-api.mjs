@@ -14,8 +14,6 @@ export function gameList(params) {
 
 	if (params) gamesURL.search = searchParams;
 
-	Fetcher.get(gamesURL)
-		.then(res => console.log(res))
-		.catch(error => console.error(error));
+	return Fetcher.get(gamesURL);
 
 }
