@@ -20,6 +20,7 @@ This is my assignment from the subject 'Web App from scratch' in the minor [Webd
     <summary>Other assignments</summary>
     <ul>
         <li><a href='https://github.com/iSirThijs/web-app-from-scratch-1920'>Web App from Scratch</a> - This assignment</li>
+        <li><a href='https://github.com/iSirThijs/css-to-the-rescue-1920'>CSS to the rescue</a></li>
     <ul>
 </details>
 
