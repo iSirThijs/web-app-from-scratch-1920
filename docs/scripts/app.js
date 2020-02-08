@@ -3,94 +3,107 @@
 	factory();
 }((function () { 'use strict';
 
-	/* 
-	 * Module to append fetch with some additional modules
-	 * based on https://codeburst.io/fetch-api-was-bringing-darkness-to-my-codebase-so-i-did-something-to-illuminate-it-7f2d8826e939
-	 */
-
-	/**
-	 * Checks if the response is 'ok'
-	 * @param {*} response - the response object from a fetch request
-	 * @returns {Promise<*>} if response is ok, resolves with the response. Else rejects with an error
-	 */
-	const checkStatus = response => {
-		if (response.ok) return response;
-		else {
-			const error = new Error(response.statusText || response.status);
-			error.response = response;
-			throw error;
-		}
-	};
-
-	/**
-	 * Parses a response to JSON
-	 * @param {*} response - the response object from a fetch request
-	 * @returns {Promise<*>} the parsed response object
-	 */
-	const parseJSON = res => res.json();
-
-	/**
-	 * Fetch with added utilities like check for status code and json parse
-	 * @param {string} url - the url for this get request
-	 * @param {*} [init] - An object containing any custom settings that you want to apply to the request
-	 * @returns {Promise<*>} The resolved JSON parsed response if 200 Ok or rejection with the error reason
-	 */
-	function get(url, init) {
-		return fetch(url, init)
-			.then(checkStatus)
-			.then(parseJSON);
-	}
-
 	const baseURL = new URL('https://api.rawg.io/');
 
 	/**
-	 * Get a list of games
-	 * @param {String[]} [params] - An array of string with search queries, without the results will be random
-	 * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
+	 * @module createVirtualElement
 	 */
-	function gameList(params) {
 
-		const gamesURL = new URL('/api/games', baseURL);
-		const searchParams = new URLSearchParams(params);
+	/**
+	 * Create a new virtual element
+	 * @param {String} tagName - a String with the HTML tagname
+	 * @param {*} [attrs] - the HTML attributes to be set on the element
+	 * @param {String} [children] - the children of this element
+	 */
+	function createVirtualElement(tagName, { attrs = {}, children = []}) {
+		const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
-		if (params) gamesURL.search = searchParams;
-
-		return get(gamesURL);
-
-	}
-
-	document.body.appendChild(createSearch());
-
-	// create a search form component with event listener
-	// make a function from this
-	function createSearch(){
-		const searchForm = document.createElement('form');
-		const searchField = document.createElement('input');
-		const searchSubmit = document.createElement('button');
-
-		searchField.setAttribute('type', 'search');
-		searchField.setAttribute('name', 'searchTerm');
-		searchSubmit.innerText = 'Search Game';
-		searchSubmit.setAttribute('type', 'submit');
-
-		searchForm.appendChild(searchField);
-		searchForm.appendChild(searchSubmit);
-
-		searchForm.addEventListener('submit', (event) => {
-			event.preventDefault();
-			let searchTerm = event.target['searchTerm'].value;
-			gameList({search: searchTerm})
-				.then(showResults)
-				.catch(error => console.error(error));
+		Object.assign(virtualElement, {
+			tagName,
+			attrs,
+			children,
 		});
-		
-		return searchForm;
+
+		return virtualElement;
 	}
 
-	function showResults({results}){
-		console.log(results);
-		// render results and pagination
+	/**
+	 * Render the virtual element
+	 * @param {Object} virtualNode - the element that needs to be rendered
+	 */
+	function renderElement({tagName, attrs, children}) {
+		// Create the HTML element
+		const $element = document.createElement(tagName);
+
+		// Set the attributes of the elements
+		for (const [key, value] of Object.entries(attrs)) {
+			$element.setAttribute(key, value);
+		}
+
+		// Append the childeren of the element
+		for (const child of children) {
+			$element.appendChild(render(child));
+		}
+
+		return $element;
 	}
+
+
+	function render(virtualElement) {
+		if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
+		else return renderElement(virtualElement);
+	}
+
+	function mount($node, $target) {
+		$target.replaceWith($node);
+		return $node;
+	}
+
+	const vApp = createVirtualElement('div', {
+		attrs: {
+			id: 'app'
+		},
+		children: [
+			'test!'
+		]
+	});
+
+	const $app = render(vApp);
+	mount($app, document.getElementById('app'));
+
+
+	// document.body.appendChild(createSearch());
+
+	// // create a search form component with event listener
+	// // make a function from this
+	// function createSearch(){
+	// 	const searchForm = document.createElement('form');
+	// 	const searchField = document.createElement('input');
+	// 	const searchSubmit = document.createElement('button');
+
+	// 	searchField.setAttribute('type', 'search');
+	// 	searchField.setAttribute('name', 'searchTerm');
+	// 	searchSubmit.innerText = 'Search Game';
+	// 	searchSubmit.setAttribute('type', 'submit');
+
+	// 	searchForm.appendChild(searchField);
+	// 	searchForm.appendChild(searchSubmit);
+
+	// 	searchForm.addEventListener('submit', (event) => {
+	// 		event.preventDefault();
+	// 		let searchTerm = event.target['searchTerm'].value;
+	// 		rawgAPI.gameList({search: searchTerm})
+	// 			.then(showResults)
+	// 			.catch(error => console.error(error));
+	// 	});
+		
+	// 	return searchForm;
+	// }
+
+	// function showResults({results}){
+	// 	console.log(results);
+	// 	// render results and pagination
+	// }
 
 
 	// fetch results
