@@ -1,8 +1,8 @@
 import { renderComponent } from './vdom.mjs';
 
 export default class Component {
-	constructor(attrs) {
-		this.attrs = attrs;
+	constructor(props) {
+		this.props = props;
 		this.state = {};
 	}
 

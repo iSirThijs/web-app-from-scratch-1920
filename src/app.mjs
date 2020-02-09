@@ -8,7 +8,7 @@ import Component from './modules/component.mjs';
 class App extends Component {
 	render(){
 		return createVirtualElement('div', {
-			attrs: { class: 'app' },
+			attributes: { class: 'app' },
 			children: [
 				createVirtualElement(Header)
 			]
@@ -21,8 +21,6 @@ const render = (vnode, parent) => {
 };
 
 render(createVirtualElement(App), document.body);
-
-
 
 
 // document.body.appendChild(createSearch());

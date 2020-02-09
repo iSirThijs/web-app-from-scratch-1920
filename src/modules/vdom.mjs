@@ -9,17 +9,17 @@
 /**
  * Create a new virtual element
  * @param {String} tagName - a String with the HTML tagname
- * @param {*} [attrs] - the HTML attributes to be set on the element
+ * @param {*} [attributes] - the HTML attributes to be set on the element
  * @param {String} [children] - the children of this element
  * @returns A virtual element with the given options
  */
-export function createVirtualElement(tagName, { attrs = {}, children = []} = {}) {
+export function createVirtualElement(tagName, { attributes = {}, children = []} = {}) {
 	// children)
 	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
 	Object.assign(virtualElement, {
 		tagName,
-		attrs,
+		attributes,
 		children,
 	});
 
@@ -36,19 +36,19 @@ export function renderNode(virtualElement) {
 	if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
 
 	
-	let {tagName, attrs, children} = virtualElement;
+	let {tagName, attributes, children} = virtualElement;
 	let $element;
 
 	if (typeof tagName === 'string') {
 		$element = document.createElement(tagName);
 		
-		for (const [key, value] of Object.entries(attrs)) {
+		for (const [key, value] of Object.entries(attributes)) {
 			$element.setAttribute(key, value);
 		} 
 	} else if(typeof tagName === 'function') {
 		const component = new tagName();
 		$element = renderNode(
-			component.render(component.attrs, component.state)
+			component.render(component.props, component.state)
 		);
 
 		component.base = $element;
@@ -61,7 +61,8 @@ export function renderNode(virtualElement) {
 
 
 export function renderComponent(component) {
-	let renderedComponent = component.render(component.attrs, component.state);
+	console.log(component);
+	let renderedComponent = component.render(component.props, component.state);
 	component.base = diff(component.base, renderedComponent);
 }
 
@@ -77,11 +78,10 @@ export function diff(oldNode, newNode, parent) {
 		// new node is a component /class
 		if (typeof newNode.tagName === 'function') {
 			const component = new newNode.tagName(newNode.attrs);
-			const rendered = component.render(component.attrs, component.state);
+			const rendered = component.render(component.props, component.state);
 
 			diff(oldNode, rendered);
 			return oldNode;
-
 		}
 
 		if (newNode.children.length !== oldNode.childNodes.length) {
@@ -107,12 +107,6 @@ export function diff(oldNode, newNode, parent) {
 		parent.appendChild(newDom);
 		return newDom;
 	}
-
-
-
-
-
-	
 
 	// // Both are text nodes or 1 is text and the other is an element
 	// if (typeof oldVirtualDom === 'string' || typeof newVirtualDom === 'string') {

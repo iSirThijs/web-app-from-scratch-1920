@@ -3,17 +3,13 @@ import Component from '../modules/component.mjs';
 
 
 export default class Header extends Component {
-	constructor(attrs) {
-		super(attrs);
+	constructor(props) {
+		super(props);
 		this.state = {text: 'Hello World'};
-		this.timer = setTimeout(() => {
-			this.setState({text: 'Welcome Back Thijs'});
-		}, 1000);
 	}
 
-	render(attrs, state) {
+	render(props, state) {
 		return createVirtualElement('header', {
-			attrs: { id: 'header'},
 			children: [
 				createVirtualElement('h1', {children: ['Game Movie Adaption']}),
 				createVirtualElement('p', {children: [state.text]})
