@@ -13,7 +13,8 @@
  * @param {String} [children] - the children of this element
  * @returns A virtual element with the given options
  */
-export function createVirtualElement(tagName, { attrs = {}, children = []}) {
+export function createVirtualElement(tagName, { attrs = {}, children = []} = {}) {
+	// children)
 	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
 	Object.assign(virtualElement, {
@@ -31,148 +32,184 @@ export function createVirtualElement(tagName, { attrs = {}, children = []}) {
  * @returns {*} Either a text node or a html element
  */
 export function renderNode(virtualElement) {
+	
 	if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
+
 	
 	let {tagName, attrs, children} = virtualElement;
 	let $element;
 
-	
 	if (typeof tagName === 'string') {
 		$element = document.createElement(tagName);
 		
 		for (const [key, value] of Object.entries(attrs)) {
 			$element.setAttribute(key, value);
-		}
-	} else if(typeof virtualElement === 'function') {
-		const component = new virtualElement(attrs);
+		} 
+	} else if(typeof tagName === 'function') {
+		const component = new tagName();
 		$element = renderNode(
-			component.render(component.props, component.state)
+			component.render(component.attrs, component.state)
 		);
 
 		component.base = $element;
 	}
-	// children
-	if (children) children.forEach(child => $element.appendChild(renderNode(child)));
+
+	(children || []).forEach(child =>$element.appendChild(renderNode(child)));
 
 	return $element;
 }
 
 
-export function renderComponent(component, parent) {
-	const oldBase = component.base;
-	component.base = renderNode(
-		component.render(component.props, component.state)
-	);
-
-	if(parent) parent.appendChild(component.base);
-	else oldBase.parentNode.replaceChild(component.base, oldBase);
+export function renderComponent(component) {
+	let renderedComponent = component.render(component.attrs, component.state);
+	component.base = diff(component.base, renderedComponent);
 }
 
-// export function diff(oldVirtualDom, newVirtualDom) {
-// 	// oldVirtualDom doesn't exist
-// 	if (!newVirtualDom) {
-// 		return $node => {
-// 			$node.remove();
-// 			return undefined;
-// 		};
-// 	}
+export function diff(oldNode, newNode, parent) {
+	// parent)
+	if(oldNode) {
+		// new node is text
+		if (typeof newNode === 'string') {
+			oldNode.nodeValue = newNode;
+			return oldNode;
+		}
 
-// 	// Both are text nodes or 1 is text and the other is an element
-// 	if (typeof oldVirtualDom === 'string' || typeof newVirtualDom === 'string') {
-// 		if(oldVirtualDom !== newVirtualDom ) {
-// 			// Both are string but differnet values or 1 is an element
-// 			// In both cases we render
-// 			return $node => {
-// 				const $newNode = renderNode(newVirtualDom);
-// 				$node.replaceWith($newNode);
-// 				return $newNode;
-// 			};
-// 		} else {
-// 			// The nodes are both text/string and have the same value
-// 			return $node => $node;
-// 		}
-// 	}
+		// new node is a component /class
+		if (typeof newNode.tagName === 'function') {
+			const component = new newNode.tagName(newNode.attrs);
+			const rendered = component.render(component.attrs, component.state);
 
-// 	// Trees are completely different and will the newVirtualDom will be rendered
-// 	if (oldVirtualDom.tagName !== newVirtualDom.tagName) {
-// 		return $node => {
-// 			const $newNode = renderNode(newVirtualDom);
-// 			$node.replaceWith($newNode);
-// 			return $newNode;
-// 		};
-// 	}
+			diff(oldNode, rendered);
+			return oldNode;
 
-// 	const patchAttrs = diffAttrs(oldVirtualDom.attrs, newVirtualDom.attrs);
-// 	const patchChildren = diffChildren(oldVirtualDom.children, newVirtualDom.children);
+		}
 
-// 	return $node => {
-// 		patchAttrs($node);
-// 		patchChildren($node);
-// 		return $node;
-// 	};
-// }
+		if (newNode.children.length !== oldNode.childNodes.length) {
+			oldNode.appendChild(
+			// render only the last child
+				renderNode(newNode.children[newNode.children.length - 1])
+			);
+		}
 
-// function diffAttrs(oldAttrs, newAttrs) {
-// 	const patches = [];
+		// run diffing for children
+		oldNode.childNodes.forEach((child, i) => diff(child, newNode.children[i]));
 
-// 	// setting new attributes
-// 	for(const [key, value] of Object.entries(newAttrs)) {
-// 		patches.push($node => {
-// 			$node.setAttribute(key, value);
-// 			return $node;
-// 		});
-// 	}
+		// diff attributes
 
-// 	// removing old attrs
-// 	for (const key in oldAttrs){
-// 		if(!(key in newAttrs)) {
-// 			patches.push($node => {
-// 				$node.removeAttribute(key);
-// 				return $node;
-// 			});
-// 		}
-// 	}
 
-// 	return $node => {
-// 		for(const patch of patches){
-// 			patch($node);
-// 		}
-// 		return $node;
-// 	};
-// }
+		return oldNode;
+		
 
-// function diffChildren(oldVirtualChildren, newVirtualChildren) {
-// 	const childPatches = [];
-// 	oldVirtualChildren.forEach((oldVirtualChild, i) => {
-// 		childPatches.push(diff(oldVirtualChild, newVirtualChildren[i]));
-// 	});
+	} else {
+		// There is no dom
+		// virtualNode)
+		const newDom = renderNode(newNode);
+		parent.appendChild(newDom);
+		return newDom;
+	}
 
-// 	const additionalPatches = [];
-// 	for (const additionalVirtualChild of newVirtualChildren.slice(oldVirtualChildren.length)) {
-// 		additionalPatches.push($node => {
-// 			$node.appendChild(renderNode(newVirtualChildren));
-// 			return $node;
-// 		});
-// 	}
 
-// 	return $parent => {
-// 		for (const [patch, $child] of zip(childPatches, $parent.childNodes)) {
-// 			patch($child);
-// 		}
 
-// 		for (const patch of additionalPatches){
-// 			patch($parent);
-// 		}
 
-// 		return $parent;
-// 	};
-// }
 
-// function zip(xs, ys) {
-// 	const zipped = [];
-// 	for (let i = 0; i < Math.min(xs.length, ys.length); i++) {
-// 		zipped.push([xs[i], ys[i]]);
-// 	}
-// 	return zipped;
-// }
+	
+
+	// // Both are text nodes or 1 is text and the other is an element
+	// if (typeof oldVirtualDom === 'string' || typeof newVirtualDom === 'string') {
+	// 	if(oldVirtualDom !== newVirtualDom ) {
+	// 		// Both are string but differnet values or 1 is an element
+	// 		// In both cases we render
+	// 		return $node => {
+	// 			const $newNode = renderNode(newVirtualDom);
+	// 			$node.replaceWith($newNode);
+	// 			return $newNode;
+	// 		};
+	// 	} else {
+	// 		// The nodes are both text/string and have the same value
+	// 		return $node => $node;
+	// 	}
+	// }
+
+	// // Trees are completely different and will the newVirtualDom will be rendered
+	// if (oldVirtualDom.tagName !== newVirtualDom.tagName) {
+	// 	return $node => {
+	// 		const $newNode = renderNode(newVirtualDom);
+	// 		$node.replaceWith($newNode);
+	// 		return $newNode;
+	// 	};
+	// }
+
+	// const patchAttrs = diffAttrs(oldVirtualDom.attrs, newVirtualDom.attrs);
+	// const patchChildren = diffChildren(oldVirtualDom.children, newVirtualDom.children);
+
+	// return $node => {
+	// 	patchAttrs($node);
+	// 	patchChildren($node);
+	// 	return $node;
+	// };
+}
+
+function diffAttrs(oldAttrs, newAttrs) {
+	const patches = [];
+
+	// setting new attributes
+	for(const [key, value] of Object.entries(newAttrs)) {
+		patches.push($node => {
+			$node.setAttribute(key, value);
+			return $node;
+		});
+	}
+
+	// removing old attrs
+	for (const key in oldAttrs){
+		if(!(key in newAttrs)) {
+			patches.push($node => {
+				$node.removeAttribute(key);
+				return $node;
+			});
+		}
+	}
+
+	return $node => {
+		for(const patch of patches){
+			patch($node);
+		}
+		return $node;
+	};
+}
+
+function diffChildren(oldVirtualChildren, newVirtualChildren) {
+	const childPatches = [];
+	oldVirtualChildren.forEach((oldVirtualChild, i) => {
+		childPatches.push(diff(oldVirtualChild, newVirtualChildren[i]));
+	});
+
+	const additionalPatches = [];
+	for (const additionalVirtualChild of newVirtualChildren.slice(oldVirtualChildren.length)) {
+		additionalPatches.push($node => {
+			$node.appendChild(renderNode(newVirtualChildren));
+			return $node;
+		});
+	}
+
+	return $parent => {
+		for (const [patch, $child] of zip(childPatches, $parent.childNodes)) {
+			patch($child);
+		}
+
+		for (const patch of additionalPatches){
+			patch($parent);
+		}
+
+		return $parent;
+	};
+}
+
+function zip(xs, ys) {
+	const zipped = [];
+	for (let i = 0; i < Math.min(xs.length, ys.length); i++) {
+		zipped.push([xs[i], ys[i]]);
+	}
+	return zipped;
+}
 

@@ -1,5 +1,5 @@
 // import * as rawgAPI from './modules/rawg-api.mjs';
-import { createVirtualElement, renderComponent} from './modules/vdom.mjs';
+import { createVirtualElement, diff} from './modules/vdom.mjs';
 import Header from './components/header.mjs';
 import Component from './modules/component.mjs';
 
@@ -10,14 +10,17 @@ class App extends Component {
 		return createVirtualElement('div', {
 			attrs: { class: 'app' },
 			children: [
-				Header,
-				createVirtualElement('p', {children: ['Hello World']} )
+				createVirtualElement(Header)
 			]
 		});
 	}
 }
 
-renderComponent(new App(), document.body);
+const render = (vnode, parent) => {
+	diff(undefined, vnode, parent);
+};
+
+render(createVirtualElement(App), document.body);
 
 
 
@@ -51,7 +54,7 @@ renderComponent(new App(), document.body);
 // }
 
 // function showResults({results}){
-// 	console.log(results);
+// 	results);
 // 	// render results and pagination
 // }
 
