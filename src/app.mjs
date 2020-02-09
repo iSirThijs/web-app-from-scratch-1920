@@ -1,17 +1,37 @@
 import * as rawgAPI from './modules/rawg-api.mjs';
-import {createVirtualElement, render, mount} from './modules/vdom.mjs';
+import {createVirtualElement, render, mount, diff} from './modules/vdom.mjs';
 
-const vApp = createVirtualElement('div', {
+
+import header from './components/header.mjs';
+
+const app = text => createVirtualElement('div', {
 	attrs: {
 		id: 'app'
 	},
 	children: [
-		'test!'
+		header,
+		text
 	]
 });
 
+let vApp = app('hello!!');
 const $app = render(vApp);
-mount($app, document.getElementById('app'));
+let $rootEl = mount($app, document.getElementById('app'));
+
+
+setTimeout(() => {
+	const vNewApp = app('world!!');
+	const patch = diff(vApp, vNewApp);
+
+	console.log(vNewApp);
+	console.log(patch);
+	
+	$rootEl = patch($rootEl);
+
+	vApp = vNewApp;
+}, 5000);
+
+
 
 
 // document.body.appendChild(createSearch());
