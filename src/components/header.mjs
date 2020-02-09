@@ -1,16 +1,18 @@
 import { createVirtualElement } from '../modules/vdom.mjs';
+import Component from '../modules/component.mjs';
 
 
-const h1 = createVirtualElement('h1', {
-	children: ['Game - Movie adaptions']
-});
+export default class Header extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {};
+	}
 
-
-const header = createVirtualElement('header', {
-	attrs: {},
-	children: [
-		h1
-	]
-});
-
-export default header;
+	render(props, state) {
+		return createVirtualElement('header', {
+			children: [
+				createVirtualElement('h1', {children: ['Game Movie Adaption']}),
+			]
+		});
+	}
+}

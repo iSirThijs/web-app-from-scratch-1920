@@ -1,35 +1,23 @@
-import * as rawgAPI from './modules/rawg-api.mjs';
-import {createVirtualElement, render, mount, diff} from './modules/vdom.mjs';
+// import * as rawgAPI from './modules/rawg-api.mjs';
+import { createVirtualElement, renderComponent} from './modules/vdom.mjs';
+import Header from './components/header.mjs';
+import Component from './modules/component.mjs';
 
 
-import header from './components/header.mjs';
 
-const app = text => createVirtualElement('div', {
-	attrs: {
-		id: 'app'
-	},
-	children: [
-		header,
-		text
-	]
-});
+class App extends Component {
+	render(){
+		return createVirtualElement('div', {
+			attrs: { class: 'app' },
+			children: [
+				Header,
+				createVirtualElement('p', {children: ['Hello World']} )
+			]
+		});
+	}
+}
 
-let vApp = app('hello!!');
-const $app = render(vApp);
-let $rootEl = mount($app, document.getElementById('app'));
-
-
-setTimeout(() => {
-	const vNewApp = app('world!!');
-	const patch = diff(vApp, vNewApp);
-
-	console.log(vNewApp);
-	console.log(patch);
-	
-	$rootEl = patch($rootEl);
-
-	vApp = vNewApp;
-}, 5000);
+renderComponent(new App(), document.body);
 
 
 
