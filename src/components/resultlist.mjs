@@ -8,13 +8,20 @@ export default class ResultList extends Component {
 	constructor(props) {
 		super(props);
 		this.state.data = [];
-		this.data = setTimeout(() => {
+		this.timer1 = setTimeout(() => {
 			rawgAPI.gameList()
 				.then(data => {
 					this.setState({data: [...data.results]});
 					// this.setState(data.result);
 				}).catch(console.error);
 		},0);
+		this.timer2 = setTimeout(() => {
+			rawgAPI.gameList({search: 'tomb raider'})
+				.then(data => {
+					this.setState({data: [...data.results]});
+					// this.setState(data.result);
+				}).catch(console.error);
+		},10000);
 	}
 
 	render(props, state){

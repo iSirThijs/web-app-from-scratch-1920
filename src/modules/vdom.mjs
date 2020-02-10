@@ -65,7 +65,6 @@ export function renderComponent(component) {
 }
 
 export function diff(dom, vNode, vNewNode, parent) {
-	// console.log(dom, vNode, vNewNode);
 	if(dom) {
 		// no new node, old node needs removal
 		if(!vNewNode) {
@@ -80,20 +79,27 @@ export function diff(dom, vNode, vNewNode, parent) {
 				let $newNode = renderNode(vNewNode);
 				dom.replaceWith($newNode);
 				return $newNode;
-			} else return vNode; // both nodes are text with the same value
+			} else return dom; // both nodes are text with the same value
 		}
 
 		if (vNode.tagName !== vNewNode.tagName) {
-			// totally different components
+			// totally different component;
 
 			// new node is a component /class
 			if (typeof vNewNode.tagName === 'function') {
 				const component = new vNewNode.tagName(vNewNode.props);
 				const vNewNode = component.render(component.props, component.state);
+				let $newNode = renderNode(vNewNode);
+		
+				component.base = $newNode;
+				component.vNode = vNewNode;
+				dom.replaceWith($newNode);
+				return $newNode;
 			}
 
 			let $newNode = renderNode(vNewNode);
 			dom.replaceWith($newNode);
+			return $newNode;
 		}
 
 		const patchAttrs = diffAttrs(vNode.attributes, vNewNode.attributes);
@@ -102,8 +108,10 @@ export function diff(dom, vNode, vNewNode, parent) {
 		patchAttrs(dom);
 		patchChildren(dom);
 
+		vNode.children = vNewNode.children;
+		vNode.attributes = vNewNode.attributes;
 
-		return vNode;
+		return dom;
 		
 
 	} else {
