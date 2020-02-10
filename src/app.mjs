@@ -1,8 +1,7 @@
-// import * as rawgAPI from './modules/rawg-api.mjs';
 import { createVirtualElement, diff} from './modules/vdom.mjs';
 import Header from './components/header.mjs';
 import Component from './modules/component.mjs';
-
+import ResultList from './components/resultlist.mjs';
 
 
 class App extends Component {
@@ -10,19 +9,18 @@ class App extends Component {
 		return createVirtualElement('div', {
 			attributes: { class: 'app' },
 			children: [
-				createVirtualElement(Header)
+				createVirtualElement(Header),
+				createVirtualElement(ResultList)
 			]
 		});
 	}
 }
 
 const render = (vnode, parent) => {
-	diff(undefined, vnode, parent);
+	diff(undefined, undefined, vnode, parent);
 };
 
 render(createVirtualElement(App), document.body);
-
-
 // document.body.appendChild(createSearch());
 
 // // create a search form component with event listener

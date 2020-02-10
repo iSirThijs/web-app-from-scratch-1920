@@ -46,11 +46,11 @@ export function renderNode(virtualElement) {
 		} 
 	} else if(typeof tagName === 'function') {
 		const component = new tagName();
-		$element = renderNode(
-			component.render(component.props, component.state)
-		);
-
+		const renderedComponent = component.render(component.props, component.state);
+		$element = renderNode(renderedComponent);
+		
 		component.base = $element;
+		component.vNode = renderedComponent;
 	}
 
 	(children || []).forEach(child =>$element.appendChild(renderNode(child)));
@@ -61,84 +61,57 @@ export function renderNode(virtualElement) {
 
 export function renderComponent(component) {
 	let renderedComponent = component.render(component.props, component.state);
-	component.base = diff(component.base, renderedComponent);
+	component.base = diff(component.base, component.vNode, renderedComponent);
 }
 
-export function diff(oldNode, newNode, parent) {
-	// parent)
-	if(oldNode) {
-		// new node is text
-		if (typeof newNode === 'string') {
-			oldNode.nodeValue = newNode;
-			return oldNode;
+export function diff(dom, vNode, vNewNode, parent) {
+	// console.log(dom, vNode, vNewNode);
+	if(dom) {
+		// no new node, old node needs removal
+		if(!vNewNode) {
+			dom.remove();
+			return undefined;
+		}
+		// one of the nodes is text
+		if (typeof vNewNode === 'string' || vNode === 'string') {
+			if(vNode !== vNewNode) {
+				// both string but different value OR one string one element
+				// both cases render new node
+				let $newNode = renderNode(vNewNode);
+				dom.replaceWith($newNode);
+				return $newNode;
+			} else return vNode; // both nodes are text with the same value
 		}
 
-		// new node is a component /class
-		if (typeof newNode.tagName === 'function') {
-			const component = new newNode.tagName(newNode.attrs);
-			const rendered = component.render(component.props, component.state);
+		if (vNode.tagName !== vNewNode.tagName) {
+			// totally different components
 
-			diff(oldNode, rendered);
-			return oldNode;
+			// new node is a component /class
+			if (typeof vNewNode.tagName === 'function') {
+				const component = new vNewNode.tagName(vNewNode.props);
+				const vNewNode = component.render(component.props, component.state);
+			}
+
+			let $newNode = renderNode(vNewNode);
+			dom.replaceWith($newNode);
 		}
 
-		if (newNode.children.length !== oldNode.childNodes.length) {
-			oldNode.appendChild(
-			// render only the last child
-				renderNode(newNode.children[newNode.children.length - 1])
-			);
-		}
+		const patchAttrs = diffAttrs(vNode.attributes, vNewNode.attributes);
+		const patchChildren = diffChildren(vNode.children, vNewNode.children);
 
-		// run diffing for children
-		oldNode.childNodes.forEach((child, i) => diff(child, newNode.children[i]));
+		patchAttrs(dom);
+		patchChildren(dom);
 
-		// compare attributes(props)
-		// compare children
 
-		return oldNode;
+		return vNode;
 		
 
 	} else {
 		// There is no dom
-		// virtualNode)
-		const newDom = renderNode(newNode);
+		const newDom = renderNode(vNewNode);
 		parent.appendChild(newDom);
 		return newDom;
 	}
-
-	// // Both are text nodes or 1 is text and the other is an element
-	// if (typeof oldVirtualDom === 'string' || typeof newVirtualDom === 'string') {
-	// 	if(oldVirtualDom !== newVirtualDom ) {
-	// 		// Both are string but differnet values or 1 is an element
-	// 		// In both cases we render
-	// 		return $node => {
-	// 			const $newNode = renderNode(newVirtualDom);
-	// 			$node.replaceWith($newNode);
-	// 			return $newNode;
-	// 		};
-	// 	} else {
-	// 		// The nodes are both text/string and have the same value
-	// 		return $node => $node;
-	// 	}
-	// }
-
-	// // Trees are completely different and will the newVirtualDom will be rendered
-	// if (oldVirtualDom.tagName !== newVirtualDom.tagName) {
-	// 	return $node => {
-	// 		const $newNode = renderNode(newVirtualDom);
-	// 		$node.replaceWith($newNode);
-	// 		return $newNode;
-	// 	};
-	// }
-
-	// const patchAttrs = diffAttrs(oldVirtualDom.attrs, newVirtualDom.attrs);
-	// const patchChildren = diffChildren(oldVirtualDom.children, newVirtualDom.children);
-
-	// return $node => {
-	// 	patchAttrs($node);
-	// 	patchChildren($node);
-	// 	return $node;
-	// };
 }
 
 function diffAttrs(oldAttrs, newAttrs) {
@@ -171,26 +144,27 @@ function diffAttrs(oldAttrs, newAttrs) {
 }
 
 function diffChildren(oldVirtualChildren, newVirtualChildren) {
+	
 	const childPatches = [];
 	oldVirtualChildren.forEach((oldVirtualChild, i) => {
-		childPatches.push(diff(oldVirtualChild, newVirtualChildren[i]));
+		childPatches.push(($node) => diff($node, oldVirtualChild, newVirtualChildren[i]));
 	});
 
 	const additionalPatches = [];
 	for (const additionalVirtualChild of newVirtualChildren.slice(oldVirtualChildren.length)) {
 		additionalPatches.push($node => {
-			$node.appendChild(renderNode(newVirtualChildren));
+			$node.appendChild(renderNode(additionalVirtualChild));
 			return $node;
 		});
 	}
 
 	return $parent => {
-		for (const [patch, $child] of zip(childPatches, $parent.childNodes)) {
-			patch($child);
-		}
-
 		for (const patch of additionalPatches){
 			patch($parent);
+		}
+
+		for (const [patch, $child] of zip(childPatches, $parent.childNodes)) {
+			patch($child);
 		}
 
 		return $parent;
