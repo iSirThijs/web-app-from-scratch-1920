@@ -1,0 +1,28 @@
+{
+  "name": "web-app-from-scratch-1920",
+  "version": "1.0.0",
+  "description": "<!-- Add a nice poster image here at the end of the week, showing off your shiny frontend 📸 -->",
+  "main": "null",
+  "scripts": {
+    "dev": "parallel build serve",
+    "serve": "serve docs",
+    "build": "rollup -c --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iSirThijs/web-app-from-scratch-1920.git"
+  },
+  "author": "Thijs Spijker",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iSirThijs/web-app-from-scratch-1920/issues"
+  },
+  "homepage": "https://github.com/iSirThijs/web-app-from-scratch-1920#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "npm-parallel": "^2.0.1",
+    "rollup": "^1.31.0",
+    "serve": "^11.3.0"
+  }
+}
