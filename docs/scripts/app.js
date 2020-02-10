@@ -39,7 +39,6 @@
 	function renderNode(virtualElement) {
 		
 		if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
-
 		
 		let {tagName, attributes, children} = virtualElement;
 		let $element;
@@ -66,7 +65,6 @@
 
 
 	function renderComponent(component) {
-		console.log(component);
 		let renderedComponent = component.render(component.props, component.state);
 		component.base = diff(component.base, renderedComponent);
 	}
@@ -99,8 +97,8 @@
 			// run diffing for children
 			oldNode.childNodes.forEach((child, i) => diff(child, newNode.children[i]));
 
-			// diff attributes
-
+			// compare attributes(props)
+			// compare children
 
 			return oldNode;
 			

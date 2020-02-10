@@ -1,5 +1,6 @@
 import * as Fetcher from './fetch-utilities.mjs';
 
+// This uses the URL Api : https://developer.mozilla.org/en-US/docs/Web/API/URL/URL
 const baseURL = new URL('https://api.rawg.io/');
 
 /**
