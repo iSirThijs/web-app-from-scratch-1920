@@ -1,7 +1,7 @@
-import Component from '../modules/component.mjs';
-import { createVirtualElement } from '../modules/vdom.mjs';
+import Component from '../utilities/component.mjs';
+import { createVirtualElement } from '../utilities/vdom.mjs';
 import ResultCard from './resultcard.mjs';
-import * as rawgAPI from '../modules/rawg-api.mjs';
+import * as rawgAPI from '../utilities/api-rawg.mjs';
 
 
 export default class ResultList extends Component {
@@ -24,13 +24,13 @@ export default class ResultList extends Component {
 		},10000);
 	}
 
-	render(props, state){
+	createVirtualComponent(props, state){
 		// console.log(state);
 		return createVirtualElement('div', {
 			attributes: { class: 'result-list'},
 			children: [...state.data.map((result => {
 				let resultCard = new ResultCard(result);
-				return resultCard.render(resultCard.props, resultCard.state);
+				return resultCard.createVirtualComponent(resultCard.props, resultCard.state);
 			}))]
 		});
 	}

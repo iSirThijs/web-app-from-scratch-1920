@@ -1,11 +1,11 @@
-import { createVirtualElement, diff} from './modules/vdom.mjs';
+import { createVirtualElement, diff} from './utilities/vdom.mjs';
 import Header from './components/header.mjs';
-import Component from './modules/component.mjs';
+import Component from './utilities/component.mjs';
 import ResultList from './components/resultlist.mjs';
 
 
 class App extends Component {
-	render(){
+	createVirtualComponent(){
 		return createVirtualElement('div', {
 			attributes: { class: 'app' },
 			children: [

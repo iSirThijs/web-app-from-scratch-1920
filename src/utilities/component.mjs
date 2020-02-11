@@ -1,4 +1,4 @@
-import { renderComponent } from './vdom.mjs';
+import { updateComponent } from './vdom.mjs';
 
 export default class Component {
 	constructor(props) {
@@ -8,6 +8,6 @@ export default class Component {
 
 	setState(state) {
 		this.state = Object.assign({}, state);
-		renderComponent(this);
+		updateComponent(this);
 	}
 }

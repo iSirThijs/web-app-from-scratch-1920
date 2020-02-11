@@ -8,13 +8,12 @@
 
 /**
  * Create a new virtual element
- * @param {String} tagName - a String with the HTML tagname
- * @param {*} [attributes] - the HTML attributes to be set on the element
- * @param {String} [children] - the children of this element
+ * @param {String} tagName - a String with the HTML node
+ * @param {*} [attributes] - the HTML attributes to be set on the node
+ * @param {String} [children] - the children of this node
  * @returns A virtual element with the given options
  */
 export function createVirtualElement(tagName, { attributes = {}, children = []} = {}) {
-	// children)
 	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
 	Object.assign(virtualElement, {
@@ -27,96 +26,103 @@ export function createVirtualElement(tagName, { attributes = {}, children = []} 
 }
 
 /**
- * Render the virtual element or a text node
+ * Render the virtual element to a HTML element and text node
  * @param {Object} virtualElement - the element that needs to be rendered
  * @returns {*} Either a text node or a html element
  */
-export function renderNode(virtualElement) {
+export function renderHTMLElement(virtualElement) {
 	
+	// The virtual element is a string: return a text node
 	if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
 	
 	let {tagName, attributes, children} = virtualElement;
 	let $element;
 
 	if (typeof tagName === 'string') {
+		// The tagname is a 'valid' HTML so using it to render
 		$element = document.createElement(tagName);
 		
+		// set it's attribute
 		for (const [key, value] of Object.entries(attributes)) {
 			$element.setAttribute(key, value);
 		} 
 	} else if(typeof tagName === 'function') {
 		const component = new tagName();
-		const renderedComponent = component.render(component.props, component.state);
-		$element = renderNode(renderedComponent);
+		const renderedComponent = component.createVirtualComponent(component.props, component.state);
+		$element = renderHTMLElement(renderedComponent);
 		
 		component.base = $element;
-		component.vNode = renderedComponent;
+		component.virtualElement = renderedComponent;
 	}
 
-	(children || []).forEach(child =>$element.appendChild(renderNode(child)));
+	(children || []).forEach(child =>$element.appendChild(renderHTMLElement(child)));
 
 	return $element;
 }
 
 
-export function renderComponent(component) {
-	let renderedComponent = component.render(component.props, component.state);
-	component.base = diff(component.base, component.vNode, renderedComponent);
+export function updateComponent(component) {
+	let virtualComponent = component.createVirtualComponent(component.props, component.state);
+	component.base = diff(component.base, component.virtualElement, virtualComponent);
 }
 
-export function diff(dom, vNode, vNewNode, parent) {
-	if(dom) {
-		// no new node, old node needs removal
-		if(!vNewNode) {
-			dom.remove();
+export function diff($element, virtualElement, virtualNewElement, parent) {
+	if($element) {
+		// no new virtual element, old element needs to be removed
+		if(!virtualNewElement) {
+			$element.remove();
 			return undefined;
 		}
-		// one of the nodes is text
-		if (typeof vNewNode === 'string' || vNode === 'string') {
-			if(vNode !== vNewNode) {
+
+		// one of the virtual elements is text
+		if (typeof virtualNewElement === 'string' || virtualElement === 'string') {
+			if(virtualElement !== virtualNewElement) {
 				// both string but different value OR one string one element
 				// both cases render new node
-				let $newNode = renderNode(vNewNode);
-				dom.replaceWith($newNode);
+				let $newNode = renderHTMLElement(virtualNewElement);
+				$element.replaceWith($newNode);
 				return $newNode;
-			} else return dom; // both nodes are text with the same value
+			} else return $element; // both nodes are text with the same value
 		}
 
-		if (vNode.tagName !== vNewNode.tagName) {
-			// totally different component;
+		// totally different elements;
+		if (virtualElement.tagName !== virtualNewElement.tagName) {
 
 			// new node is a component /class
-			if (typeof vNewNode.tagName === 'function') {
+			if (typeof virtualNewElement.tagName === 'function') {
 				const component = new vNewNode.tagName(vNewNode.props);
-				const vNewNode = component.render(component.props, component.state);
-				let $newNode = renderNode(vNewNode);
+				const virtualComponent = component.render(component.props, component.state);
+				let $newNode = renderHTMLElement(virtualComponent);
 		
 				component.base = $newNode;
-				component.vNode = vNewNode;
-				dom.replaceWith($newNode);
+				component.virtualElement = virtualComponent;
+				$element.replaceWith($newNode);
 				return $newNode;
 			}
 
-			let $newNode = renderNode(vNewNode);
-			dom.replaceWith($newNode);
+			let $newNode = renderHTMLElement(virtualNewElement);
+			$element.replaceWith($newNode);
 			return $newNode;
 		}
 
-		const patchAttrs = diffAttrs(vNode.attributes, vNewNode.attributes);
-		const patchChildren = diffChildren(vNode.children, vNewNode.children);
+		// If the code reaches this, the element is the same, but either its attributes changed or its children need updating (or both)
+		const patchAttrs = diffAttrs(virtualElement.attributes, virtualNewElement.attributes);
+		const patchChildren = diffChildren(virtualElement.children, virtualNewElement.children);
 
-		patchAttrs(dom);
-		patchChildren(dom);
+		patchAttrs($element);
+		patchChildren($element);
 
-		vNode.children = vNewNode.children;
-		vNode.attributes = vNewNode.attributes;
+		// Update the old virtualElement with the updates
+		virtualElement.children = virtualNewElement.children;
+		virtualElement.attributes = virtualNewElement.attributes;
 
-		return dom;
+		return $element;
 		
 
 	} else {
-		// There is no dom
-		const newDom = renderNode(vNewNode);
+		// There is no $element so we append it to the parent
+		// this is used to mount the app (or other loose components)
+		const newDom = renderHTMLElement(virtualNewElement);
 		parent.appendChild(newDom);
 		return newDom;
 	}
@@ -161,7 +167,7 @@ function diffChildren(oldVirtualChildren, newVirtualChildren) {
 	const additionalPatches = [];
 	for (const additionalVirtualChild of newVirtualChildren.slice(oldVirtualChildren.length)) {
 		additionalPatches.push($node => {
-			$node.appendChild(renderNode(additionalVirtualChild));
+			$node.appendChild(renderHTMLElement(additionalVirtualChild));
 			return $node;
 		});
 	}

@@ -1,5 +1,5 @@
-import Component from '../modules/component.mjs';
-import { createVirtualElement } from '../modules/vdom.mjs';
+import Component from '../utilities/component.mjs';
+import { createVirtualElement } from '../utilities/vdom.mjs';
 
 
 export default class ResultCard extends Component {
@@ -8,7 +8,7 @@ export default class ResultCard extends Component {
 		this.state = props;
 	}
 
-	render(props, state) {
+	createVirtualComponent(props, state) {
 		return createVirtualElement('article', {
 			attributes: { id: state.id },
 			children: [
