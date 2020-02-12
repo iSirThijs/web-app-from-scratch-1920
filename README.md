@@ -10,6 +10,7 @@ The app is a work in progress, but you can check it here: https://isirthijs.gith
 - Check whether the movie is good or bad
 - See details about the games or movie
 
+# Contents <!-- omit in toc -->
 - [Game - Movie adaption](#game---movie-adaption)
   - [Features](#features)
 - [Minor Webdevelopment](#minor-webdevelopment)
