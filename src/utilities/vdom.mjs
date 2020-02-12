@@ -13,13 +13,14 @@
  * @param {String} [children] - the children of this node
  * @returns A virtual element with the given options
  */
-export function createVirtualElement(tagName, { attributes = {}, children = []} = {}) {
+export function createVirtualElement(tagName, { attributes = {}, children = [], events = {}} = {}) {
 	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
 	Object.assign(virtualElement, {
 		tagName,
 		attributes,
 		children,
+		events
 	});
 
 	return virtualElement;
@@ -35,7 +36,7 @@ export function renderHTMLElement(virtualElement) {
 	// The virtual element is a string: return a text node
 	if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
 	
-	let {tagName, attributes, children} = virtualElement;
+	let {tagName, attributes, children, events} = virtualElement;
 	let $element;
 
 	if (typeof tagName === 'string') {
@@ -45,7 +46,12 @@ export function renderHTMLElement(virtualElement) {
 		// set it's attribute
 		for (const [key, value] of Object.entries(attributes)) {
 			$element.setAttribute(key, value);
-		} 
+		}
+
+		for (const [event, callback] of Object.entries(events)) {
+			$element.addEventListener(event, callback);
+		}
+
 	} else if(typeof tagName === 'function') {
 		const component = new tagName();
 		const renderedComponent = component.createVirtualComponent(component.props, component.state);
@@ -68,6 +74,8 @@ export function updateComponent(component) {
 
 export function diff($element, virtualElement, virtualNewElement, parent) {
 	if($element) {
+
+		// console.log($element, virtualElement, virtualNewElement, parent);
 		// no new virtual element, old element needs to be removed
 		if(!virtualNewElement) {
 			$element.remove();
@@ -90,7 +98,7 @@ export function diff($element, virtualElement, virtualNewElement, parent) {
 
 			// new node is a component /class
 			if (typeof virtualNewElement.tagName === 'function') {
-				const component = new vNewNode.tagName(vNewNode.props);
+				const component = new virtualNewElement.tagName(virtualNewElement.props);
 				const virtualComponent = component.render(component.props, component.state);
 				let $newNode = renderHTMLElement(virtualComponent);
 		

@@ -18,13 +18,14 @@
 	 * @param {String} [children] - the children of this node
 	 * @returns A virtual element with the given options
 	 */
-	function createVirtualElement(tagName, { attributes = {}, children = []} = {}) {
+	function createVirtualElement(tagName, { attributes = {}, children = [], events = {}} = {}) {
 		const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
 		Object.assign(virtualElement, {
 			tagName,
 			attributes,
 			children,
+			events
 		});
 
 		return virtualElement;
@@ -40,7 +41,7 @@
 		// The virtual element is a string: return a text node
 		if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
 		
-		let {tagName, attributes, children} = virtualElement;
+		let {tagName, attributes, children, events} = virtualElement;
 		let $element;
 
 		if (typeof tagName === 'string') {
@@ -50,7 +51,12 @@
 			// set it's attribute
 			for (const [key, value] of Object.entries(attributes)) {
 				$element.setAttribute(key, value);
-			} 
+			}
+
+			for (const [event, callback] of Object.entries(events)) {
+				$element.addEventListener(event, callback);
+			}
+
 		} else if(typeof tagName === 'function') {
 			const component = new tagName();
 			const renderedComponent = component.createVirtualComponent(component.props, component.state);
@@ -73,6 +79,8 @@
 
 	function diff($element, virtualElement, virtualNewElement, parent) {
 		if($element) {
+
+			// console.log($element, virtualElement, virtualNewElement, parent);
 			// no new virtual element, old element needs to be removed
 			if(!virtualNewElement) {
 				$element.remove();
@@ -95,7 +103,7 @@
 
 				// new node is a component /class
 				if (typeof virtualNewElement.tagName === 'function') {
-					const component = new vNewNode.tagName(vNewNode.props);
+					const component = new virtualNewElement.tagName(virtualNewElement.props);
 					const virtualComponent = component.render(component.props, component.state);
 					let $newNode = renderHTMLElement(virtualComponent);
 			
@@ -213,17 +221,12 @@
 	class Header extends Component {
 		constructor(props) {
 			super(props);
-			this.state.text = 'Hello World';
-			this.timer = setTimeout(() => {
-				this.setState({text: 'welcome back' });
-			}, 5000);
 		}
 
 		createVirtualComponent(props, state) {
 			return createVirtualElement('header', {
 				children: [
-					createVirtualElement('h1', {children: ['Game Movie Adaption']}),
-					createVirtualElement('p', {children: [state.text]})
+					createVirtualElement('h1', {children: ['Game Movie Adaption']})
 				]
 			});
 		}
@@ -232,19 +235,60 @@
 	class ResultCard extends Component {
 		constructor(props) {
 			super(props);
-			this.state = props;
 		}
 
 		createVirtualComponent(props, state) {
 			return createVirtualElement('article', {
-				attributes: { id: state.id },
+				attributes: { id: props.id },
 				children: [
 					createVirtualElement('h3', {
-						children: [state.name]
+						children: [props.name]
 					})
 				]
 			});
 		}
+	}
+
+	class ResultList extends Component {
+		constructor(props) {
+			super(props);
+		}
+
+		createVirtualComponent(props, state){
+			return createVirtualElement('div', {
+				attributes: { class: 'result-list'},
+				children: [...props.results.map((result => {
+					let resultCard = new ResultCard(result);
+					return resultCard.createVirtualComponent(resultCard.props, resultCard.state);
+				}))]
+			});
+		}
+
+	}
+
+	class SearchForm extends Component {
+		constructor(props) {
+			super(props);
+			this.submit = this.submit.bind(this); // allows access to this component instead of the $element
+		}
+
+		submit(event){
+			event.preventDefault();
+			if(event.target[0].value.length >= 1) this.props.setSearchOptions({search: event.target[0].value});
+			else alert('please enter a search term');
+		}
+
+		createVirtualComponent(props, state){
+			return createVirtualElement('form', {
+				attributes: { class: 'result-list'},
+				events: { submit: this.submit},
+				children: [
+					createVirtualElement('input', {attributes: { type: 'search'}}),
+					createVirtualElement('button', {attributes: { type: 'submit'}, children: ['search']})
+				]
+			});
+		}
+
 	}
 
 	/* 
@@ -304,37 +348,35 @@
 
 	}
 
-	class ResultList extends Component {
-		constructor(props) {
+	class Overview extends Component {
+		constructor(props){
 			super(props);
-			this.state.data = [];
-			this.timer1 = setTimeout(() => {
-				gameList()
-					.then(data => {
-						this.setState({data: [...data.results]});
-						// this.setState(data.result);
-					}).catch(console.error);
-			},0);
-			this.timer2 = setTimeout(() => {
-				gameList({search: 'tomb raider'})
-					.then(data => {
-						this.setState({data: [...data.results]});
-						// this.setState(data.result);
-					}).catch(console.error);
-			},10000);
+			this.state.results= [];
+			this.state.search = undefined;
+			this.search = new SearchForm({ setSearchOptions: this.setSearchOptions.bind(this)});
+			this.resultList = new ResultList(this.state);
 		}
 
-		createVirtualComponent(props, state){
-			// console.log(state);
-			return createVirtualElement('div', {
-				attributes: { class: 'result-list'},
-				children: [...state.data.map((result => {
-					let resultCard = new ResultCard(result);
-					return resultCard.createVirtualComponent(resultCard.props, resultCard.state);
-				}))]
+		setSearchOptions({search}){
+			console.log(search);
+			this.state.search = search;
+			gameList(this.state).then((data) => this.setResults(data.results));
+		}
+
+		setResults(results){
+			this.state.results = results;
+			updateComponent(this);
+		}
+
+		createVirtualComponent(props, state) {
+			console.log(props, state);
+			return createVirtualElement('main', {
+				children: [
+					this.search.createVirtualComponent(this.search.props, this.search.state),
+					this.resultList.createVirtualComponent(this.state, this.resultList.state.results)
+				]
 			});
 		}
-
 	}
 
 	class App extends Component {
@@ -343,7 +385,7 @@
 				attributes: { class: 'app' },
 				children: [
 					createVirtualElement(Header),
-					createVirtualElement(ResultList)
+					createVirtualElement(Overview)
 				]
 			});
 		}
@@ -354,41 +396,6 @@
 	};
 
 	render(createVirtualElement(App), document.body);
-	// document.body.appendChild(createSearch());
-
-	// // create a search form component with event listener
-	// // make a function from this
-	// function createSearch(){
-	// 	const searchForm = document.createElement('form');
-	// 	const searchField = document.createElement('input');
-	// 	const searchSubmit = document.createElement('button');
-
-	// 	searchField.setAttribute('type', 'search');
-	// 	searchField.setAttribute('name', 'searchTerm');
-	// 	searchSubmit.innerText = 'Search Game';
-	// 	searchSubmit.setAttribute('type', 'submit');
-
-	// 	searchForm.appendChild(searchField);
-	// 	searchForm.appendChild(searchSubmit);
-
-	// 	searchForm.addEventListener('submit', (event) => {
-	// 		event.preventDefault();
-	// 		let searchTerm = event.target['searchTerm'].value;
-	// 		rawgAPI.gameList({search: searchTerm})
-	// 			.then(showResults)
-	// 			.catch(error => console.error(error));
-	// 	});
-		
-	// 	return searchForm;
-	// }
-
-	// function showResults({results}){
-	// 	results);
-	// 	// render results and pagination
-	// }
-
-
-	// fetch results
 
 })));
 //# sourceMappingURL=app.js.map
