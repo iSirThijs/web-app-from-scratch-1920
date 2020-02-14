@@ -98,7 +98,7 @@ The return data look like this:
 # App internals
 This is how the app works internally, made visual using two diagrams:
 ## Actor Diagram
-![](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/actor-diagram.png)
+![](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/actor-diagram-v2.png)
 
 ## Interaction Diagram
 ![](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/interaction-diagram.png)
@@ -119,7 +119,7 @@ This is how the app works internally, made visual using two diagrams:
 # License
 MIT License
 
-Copyright (c) [year] [fullname]
+Copyright (c) 2020 Thijs Spijker
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
