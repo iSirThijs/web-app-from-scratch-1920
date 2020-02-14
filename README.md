@@ -98,10 +98,10 @@ The return data look like this:
 # App internals
 This is how the app works internally, made visual using two diagrams:
 ## Actor Diagram
-![](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/actor-diagram-v2.png)
+![Actor Diagram](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/actor-diagram-v2.png)
 
 ## Interaction Diagram
-![](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/interaction-diagram.png)
+![Interaction Diagram](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/interaction-diagram.png)
 
 # Dependencies
 * [Rollup](https://github.com/rollup/rollup)
