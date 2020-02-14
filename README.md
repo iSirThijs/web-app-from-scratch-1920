@@ -21,6 +21,10 @@ The app is a work in progress, but you can check it here: https://isirthijs.gith
     - [Development](#development)
     - [Build](#build)
     - [Local webserver](#local-webserver)
+- [Data sources](#data-sources)
+- [App internals](#app-internals)
+  - [Actor Diagram](#actor-diagram)
+  - [Interaction Diagram](#interaction-diagram)
 - [Dependencies](#dependencies)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
@@ -58,8 +62,46 @@ Run `npm run build` to run rollup and bundle th JS to `docs/scripts/app.js`
 ### Local webserver
 Run `npm run serve` to run a localhost server. The terminal will tell which address to put in the browser
 
-<!-- # Data sources -->
-<!-- What external data source is featured in your project and what are its properties 🌠 -->
+
+# Data sources
+This project features from the game database [RAWG](https://rawg.io). It uses REST GET request with query parameters to obtain the data. 
+
+The return data look like this:
+```js
+{
+  "count": 0,
+  "next": "http://example.com",
+  "previous": "http://example.com",
+  "results": [
+    {
+      "id": 0,
+      "slug": "string",
+      "name": "string",
+      "released": "2020-02-14",
+      "tba": true,
+      "background_image": "http://example.com",
+      "rating": 0,
+      "rating_top": 0,
+      "ratings": {},
+      "ratings_count": 0,
+      "reviews_text_count": "string",
+      "added": 0,
+      "added_by_status": {},
+      "metacritic": 0,
+      "playtime": 0,
+      "suggestions_count": 0
+    }
+  ]
+}
+```
+
+# App internals
+This is how the app works internally, made visual using two diagrams:
+## Actor Diagram
+![](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/actor-diagram.png)
+
+## Interaction Diagram
+![](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/interaction-diagram.png)
 
 # Dependencies
 * [Rollup](https://github.com/rollup/rollup)
