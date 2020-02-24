@@ -1,29 +1,35 @@
-import Component from '../utilities/component.mjs';
-import { createVirtualElement } from '../utilities/vdom.mjs';
+import { createVirtualElement, updateComponent } from 'utils/vdom.mjs';
+import Component from 'utils/component.mjs';
+import ResultList from 'components/resultlist.mjs';
+import SearchForm from 'components/search.mjs';
+import * as rawgAPI from 'modules/api-rawg.mjs';
 
-
-export default class SearchForm extends Component {
-	constructor(props) {
+export default class Search extends Component {
+	constructor(props){
 		super(props);
-		this.submit = this.submit.bind(this); // allows access to this component instead of the $element
+		this.state.results= [];
+		this.state.search = undefined;
+		this.search = new SearchForm({ setSearchOptions: this.setSearchOptions.bind(this)});
+		this.resultList = new ResultList(this.state);
 	}
 
-	submit(event){
-		event.preventDefault();
-		if(event.target[0].value.length >= 1) this.props.setSearchOptions({search: event.target[0].value});
-		else alert('please enter a search term');
+	setSearchOptions({search}){
+		console.log(search);
+		this.state.search = search;
+		rawgAPI.gameList(this.state).then((data) => this.setResults(data.results));
 	}
 
-	createVirtualComponent(props, state){
-		return createVirtualElement('form', {
-			attributes: { class: 'result-list'},
-			events: { submit: this.submit},
+	setResults(results){
+		this.state.results = results;
+		updateComponent(this);
+	}
+
+	createVirtualComponent(props, state) {
+		return createVirtualElement('div', {
 			children: [
-				createVirtualElement('input', {attributes: { type: 'search'}}),
-				createVirtualElement('button', {attributes: { type: 'submit'}, children: ['search']})
+				this.search.createVirtualComponent(this.search.props, this.search.state),
+				this.resultList.createVirtualComponent(this.state, this.resultList.state.results)
 			]
 		});
 	}
-
 }
-

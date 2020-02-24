@@ -1,9 +1,9 @@
 import Component from '../utilities/component.mjs';
 import { createVirtualElement } from '../utilities/vdom.mjs';
-import ResultCard from './resultcard.mjs';
+import ResultCard from './game-card.mjs';
 
 
-export default class ResultList extends Component {
+export default class GameList extends Component {
 	constructor(props) {
 		super(props);
 	}

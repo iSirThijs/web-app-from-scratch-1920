@@ -72,6 +72,7 @@ export function updateComponent(component) {
 	component.base = diff(component.base, component.virtualElement, virtualComponent);
 }
 
+
 export function diff($element, virtualElement, virtualNewElement, parent) {
 	if($element) {
 
@@ -99,7 +100,7 @@ export function diff($element, virtualElement, virtualNewElement, parent) {
 			// new node is a component /class
 			if (typeof virtualNewElement.tagName === 'function') {
 				const component = new virtualNewElement.tagName(virtualNewElement.props);
-				const virtualComponent = component.render(component.props, component.state);
+				const virtualComponent = component.createVirtualComponent(component.props, component.state);
 				let $newNode = renderHTMLElement(virtualComponent);
 		
 				component.base = $newNode;

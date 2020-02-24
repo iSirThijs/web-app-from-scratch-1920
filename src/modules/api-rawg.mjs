@@ -1,4 +1,4 @@
-import * as Fetcher from './fetcher.mjs';
+import * as Fetcher from '../utilities/fetcher.mjs';
 
 // This uses the URL Api : https://developer.mozilla.org/en-US/docs/Web/API/URL/URL
 const baseURL = new URL('https://api.rawg.io/');
