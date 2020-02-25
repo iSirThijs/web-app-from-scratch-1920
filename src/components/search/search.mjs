@@ -8,13 +8,12 @@ export default class Search extends Component {
 	constructor(props){
 		super(props);
 		this.state.results= [];
-		this.state.search = undefined;
+		this.state.searchParams = props.url.searchParams || new URLSearchParams();// add default searchparam?
 		this.search = new SearchForm({ setSearchOptions: this.setSearchOptions.bind(this)});
 		this.resultList = new ResultList(this.state);
 	}
 
 	setSearchOptions({search}){
-		console.log(search);
 		this.state.search = search;
 		rawgAPI.gameList(this.state).then((data) => this.setResults(data.results));
 	}

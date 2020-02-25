@@ -1,4 +1,4 @@
-import { updateComponent } from './vdom.mjs';
+import { updateComponent } from 'utils/vdom.mjs';
 
 export default class Component {
 	constructor(props) {

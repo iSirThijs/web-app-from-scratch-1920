@@ -1,7 +1,22 @@
 import Component from '../utilities/component.mjs';
 import { createVirtualElement } from '../utilities/vdom.mjs';
-import ResultCard from './game-card.mjs';
 
+export class ResultCard extends Component {
+	constructor(props) {
+		super(props);
+	}
+
+	createVirtualComponent(props, state) {
+		return createVirtualElement('article', {
+			attributes: { id: props.id },
+			children: [
+				createVirtualElement('h3', {
+					children: [props.name]
+				})
+			]
+		});
+	}
+}
 
 export default class GameList extends Component {
 	constructor(props) {
