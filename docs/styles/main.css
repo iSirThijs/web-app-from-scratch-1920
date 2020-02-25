@@ -4,3 +4,12 @@ body {
 	color: whitesmoke;
 }
 
+.app > header nav ul {
+	display: flex;
+	justify-content: row;
+	justify-content: space-evenly;
+
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}

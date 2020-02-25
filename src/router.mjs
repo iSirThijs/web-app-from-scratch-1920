@@ -1,18 +1,18 @@
 import 'utils/routie.js';
 import App from './app.mjs'; 
 import Home from './pages/home.mjs';
-import Test from './pages/test.mjs'; // maybe move this to a seperate routes module;
+import Search from './pages/search.mjs';
 
+const app = new App();
 const render = ($element, parent) => {
 	parent.appendChild($element);
 };
 
-const app = new App();
 render(app.base, document.body); // first time render (home is default state)
 
 routie({
 	'home': () => app.changePage(Home),
-	'test': () => app.changePage(Test)
+	'search': () => app.changePage(Search)
 });
 
 routie('home');

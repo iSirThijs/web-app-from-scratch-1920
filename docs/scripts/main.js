@@ -435,26 +435,6 @@
    */
 
   /**
-   * Create a new virtual element
-   * @param {String} tagName - a String with the HTML node
-   * @param {*} [attributes] - the HTML attributes to be set on the node
-   * @param {String} [children] - the children of this node
-   * @returns A virtual element with the given options
-   */
-  function createVirtualElement$1(tagName, { attributes = {}, children = [], events = {}} = {}) {
-  	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
-
-  	Object.assign(virtualElement, {
-  		tagName,
-  		attributes,
-  		children,
-  		events
-  	});
-
-  	return virtualElement;
-  }
-
-  /**
    * Render the virtual element to a HTML element and text node
    * @param {Object} virtualElement - the element that needs to be rendered
    * @returns {*} Either a text node or a html element
@@ -646,37 +626,65 @@
   	createVirtualComponent(){
   		return createVirtualElement('main', { 
   			children: [
-  				createVirtualElement('p', { children: ['Hello World']}),
-  				createVirtualElement('a', {
-  					attributes: { href: '#test'},
-  					children: ['Go to test page']
-  				})
+  				// 
   			]
   		});
   	}
   }
 
-  class Component$1 {
-  	constructor(props) {
-  		this.props = props;
-  		this.state = {};
-  	}
+  // Event listener for back button
+  const back = (event) => {
+  	event.preventDefault();
+  	window.history.back();
+  };
 
-  	setState(state) {
-  		this.state = Object.assign({}, state);
-  		updateComponent$1(this);
-  	}
-  }
+  // Links in the nav bar
+  const ulLinks = [
+  	createVirtualElement('li', {
+  		children: [ createVirtualElement('a', { 
+  			attributes: { href: '#' }, 
+  			events: { 'click': back }, 
+  			children: ['Back'] })]
+  	}),
+  	createVirtualElement('li', {
+  		children: [ createVirtualElement('a', { 
+  			attributes: { href: '#home' }, 
+  			children: ['Home'] })]
+  	}),
+  	createVirtualElement('li', {
+  		children: [ createVirtualElement('a', {
+  			attributes: { href: '#search' }, 
+  			children: ['Search'] })]
+  	})
+  ];
 
-  class Header extends Component$1 {
+  class Nav extends Component {
   	constructor(props) {
   		super(props);
   	}
 
   	createVirtualComponent(props, state) {
-  		return createVirtualElement$1('header', {
+  		return createVirtualElement('nav', {
   			children: [
-  				createVirtualElement$1('h1', {children: ['Game Movie Adaption']})
+  				createVirtualElement('ul', {
+  					children: ulLinks
+  				}),
+  				// nav bar
+  			]
+  		});
+  	}
+  }
+
+  class Header extends Component {
+  	constructor(props) {
+  		super(props);
+  	}
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('header', {
+  			children: [
+  				createVirtualElement('h1', {children: ['Game Explorer']}),
+  				createVirtualElement(Nav)
   			]
   		});
   	}
@@ -685,13 +693,14 @@
   class App extends Component {
   	constructor(props) {
   		super(props);
-  		this.state.page = props && props.page ? new props.page() : new Home();
+  		this.state.page = props && props.page ? new props.page() : new Home();  // defaults to home(but should have dedicated error/notfound page)
   		this.virtualElement = this.createVirtualComponent(this.props, this.state);
   		this.base = renderHTMLElement(this.virtualElement);
   	}
 
   	changePage(page){
-  		this.state.page = new page();
+  		const url = new URL(document.location);
+  		this.state.page = new page({url});
   		updateComponent(this);
   	}
 
@@ -710,40 +719,37 @@
   	createVirtualComponent(){
   		return createVirtualElement('main', { 
   			children: [
-  				createVirtualElement('p', { children: ['Hello World']}),
-  				createVirtualElement('a', {
-  					attributes: { href: '#test'},
-  					children: ['Go to test page']
-  				})
+  				// 
   			]
   		});
   	}
   }
 
-  class Test extends Component {
+  class Search extends Component {
+  	constructor(props){
+  		super(props);
+  		console.log(props);
+  	}
+
   	createVirtualComponent(){
   		return createVirtualElement('main', { 
   			children: [
-  				createVirtualElement('p', { children: ['Test Page']}),
-  				createVirtualElement('a', {
-  					attributes: { href: '#home'},
-  					children: ['Go to home page']
-  				})
+  				// search page content
   			]
   		});
   	}
   }
 
+  const app = new App();
   const render = ($element, parent) => {
   	parent.appendChild($element);
   };
 
-  const app = new App();
   render(app.base, document.body); // first time render (home is default state)
 
   routie({
   	'home': () => app.changePage(Home$1),
-  	'test': () => app.changePage(Test)
+  	'search': () => app.changePage(Search)
   });
 
   routie('home');
