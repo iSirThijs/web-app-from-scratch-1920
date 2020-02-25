@@ -1,17 +1,16 @@
-# Game - Movie adaption
+# Game Explorer
 <!-- Add a nice poster image here at the end of the week, showing off your shiny frontend 📸 -->
 
-This is a webapp to see if a game has a movie adaption. Search for a game and view which movies are adapted from it. Check its detail page for more info about the game and it adaptions. 
+This is a webapp to explore games. Search for a game and view details from it. Check its detail page for more info about the game and more
 
 The app is a work in progress, but you can check it here: https://isirthijs.github.io/web-app-from-scratch-1920/
 
 ## Features
-- See if your favorite game has a movie adaption
-- Check whether the movie is good or bad
-- See details about the games or movie
+- Check details about a game like rating, stores
+- See if there is a reddit community
 
 # Contents <!-- omit in toc -->
-- [Game - Movie adaption](#game---movie-adaption)
+- [Game Explorer](#game-explorer)
   - [Features](#features)
 - [Minor Webdevelopment](#minor-webdevelopment)
 - [Install and Usage](#install-and-usage)
@@ -20,7 +19,6 @@ The app is a work in progress, but you can check it here: https://isirthijs.gith
   - [Usage](#usage)
     - [Development](#development)
     - [Build](#build)
-    - [Local webserver](#local-webserver)
 - [Data sources](#data-sources)
 - [App internals](#app-internals)
   - [Actor Diagram](#actor-diagram)
@@ -47,20 +45,17 @@ This is my assignment from the subject 'Web App from scratch' in the minor [Webd
 
 ## Install 
 1. Clone this repo
-```
+```bash
 git clone https://github.com/iSirThijs/web-app-from-scratch-1920.git
 ```
-2. Install dependencies with ``` npm install``
+2. Install dependencies with ``` npm install```
 
 ## Usage
 ### Development 
-To run the dev environment: ``` npm run dev ```. This wil run rollup watcher and serve with parallel, allowing you to view on localhost:*. Terminal will show the port/address
+To run the dev environment: ``` npm run dev ```. This wil run rollup watcher and serve with, allowing you to view on localhost:*. Terminal will show the port/address
 
 ### Build
 Run `npm run build` to run rollup and bundle th JS to `docs/scripts/app.js`
-
-### Local webserver
-Run `npm run serve` to run a localhost server. The terminal will tell which address to put in the browser
 
 
 # Data sources
@@ -105,8 +100,8 @@ This is how the app works internally, made visual using two diagrams:
 
 # Dependencies
 * [Rollup](https://github.com/rollup/rollup)
-* [Server](https://github.com/zeit/serve)
-* [Parallel](https://github.com/spion/npm-parallel)
+* [Rollup Plugin Alias](https://[github](https://github.com/rollup/plugins/tree/master/packages/alias).com/zeit/serve)
+* [Rollup Plugin Server](https://github.com/thgh/rollup-plugin-serve)
 
 # Acknowledgements
 * Virtual Dom tutorials and resources:
