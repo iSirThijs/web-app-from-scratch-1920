@@ -428,10 +428,180 @@
 
   }
 
+  function transformToResultList(data) {
+  	return data.results.map((result) => {
+  		let { id, slug, name } = result;
+  		return { id, slug, name };
+  	});
+  }
+
+  /* 
+   * Module to append fetch with some additional modules
+   * based on https://codeburst.io/fetch-api-was-bringing-darkness-to-my-codebase-so-i-did-something-to-illuminate-it-7f2d8826e939
+   */
+
+  /**
+   * Checks if the response is 'ok'
+   * @param {*} response - the response object from a fetch request
+   * @returns {Promise<*>} if response is ok, resolves with the response. Else rejects with an error
+   */
+  const checkStatus = response => {
+  	if (response.ok) return response;
+  	else {
+  		const error = new Error(response.statusText || response.status);
+  		error.response = response;
+  		throw error;
+  	}
+  };
+
+  /**
+   * Parses a response to JSON
+   * @param {*} response - the response object from a fetch request
+   * @returns {Promise<*>} the parsed response object
+   */
+  const parseJSON = res => res.json();
+
+  /**
+   * Fetch with added utilities like check for status code and json parse
+   * @param {string} url - the url for this get request
+   * @param {*} [init] - An object containing any custom settings that you want to apply to the request
+   * @returns {Promise<*>} The resolved JSON parsed response if 200 Ok or rejection with the error reason
+   */
+  function get(url, init) {
+  	return fetch(url, init)
+  		.then(checkStatus)
+  		.then(parseJSON);
+  }
+
+  // This uses the URL Api : https://developer.mozilla.org/en-US/docs/Web/API/URL/URL
+  const baseURL = new URL('https://api.rawg.io/');
+
+  /**
+   * Get a list of games
+   * @param {String[]} [params] - An array of string with search queries, without the results will be random
+   * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
+   */
+  function gameList(params) {
+
+  	const gamesURL = new URL('/api/games', baseURL);
+  	const searchParams = new URLSearchParams(params);
+
+  	if (params) gamesURL.search = searchParams;
+
+  	return get(gamesURL);
+
+  }
+
+  // backbutton atom
+  const backButton = () => {
+  	const previousPage = (event) => {
+  		event.preventDefault();
+  		window.history.back();
+  	};
+
+  	return createVirtualElement('button', {children: ['back'], events: {click: previousPage}});
+  };
+
+  // form molecule
+  class easySearchForm extends Component {
+  	constructor(props){
+  		super(props);
+  		this.props.input = (event) => {
+  			props.parent.apiQueryState = event.target.value;
+  		};
+  	}
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('form', {
+  			children: [
+  				createVirtualElement('input', {attributes: {type: 'text'}, events: {input: props.input}}),
+  				createVirtualElement('button', {attributes: {type: 'submit'}, children: ['Search']})
+  			]
+  		});
+  	}
+
+  }
+
+  const form = (props) => {
+  	let newForm = new easySearchForm(props);
+  	return newForm.createVirtualComponent(newForm.props, newForm.state);
+  };
+
+  // easySearch list
+  class easySearchList extends Component {
+  	constructor(props){
+  		super(props);
+  		this.state.results = props.results;
+
+  	}
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('ul', {
+  			children: [
+  				...state.results.map((result) => {
+  					return createVirtualElement('li', {
+  						attributes: { id: result.id },
+  						children: [
+  							createVirtualElement('h4', {children: [result.name]})
+  						]
+  					});
+  				})
+  			]
+  		});
+  	}
+  }
+
+  const list = (props) => {
+  	const newList = new easySearchList(props);
+  	return newList.createVirtualComponent(newList.props, newList.state);
+  };
+
+
+  // nav component
+  class Nav extends Component {
+  	constructor(props) {
+  		super(props);
+
+  		this.state.results = [];
+
+  		this.state.apiQuery = {
+  			page_size: 10
+  		};
+
+  	}
+
+  	set apiQueryState(search) {
+  		if (search.length < 3 ) this.apiResultsState = [];
+  		else {
+  			this.state.apiQuery.search = search;
+
+  			// there should be more results from different endpoints here(games, developers, creators etc)
+  			gameList(this.state.apiQuery)
+  				.then(transformToResultList)
+  				.then((results) => this.apiResultsState = results);
+  		}
+  	
+  	}
+
+  	set apiResultsState(results) {
+  		this.state.results = results;
+  		updateComponent(this);
+  	}
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('nav', {
+  			children: [
+  				backButton(),
+  				form({parent: this}),
+  				list({results: state.results})
+  			]
+  		});
+  	}
+  }
+
   const headerDefaults = {
   	siteTitle: 'Game Explorer'
   };
-
 
 
   class Header extends Component {
@@ -445,7 +615,7 @@
   		return createVirtualElement('header', {
   			children: [
   				createVirtualElement('h1', { children: [props.siteTitle]}),
-  				createVirtualElement('nav')
+  				createVirtualElement(Nav)
   			]
   		});
 
