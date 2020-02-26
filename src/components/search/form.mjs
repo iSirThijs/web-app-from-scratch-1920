@@ -1,7 +1,6 @@
 import Component from 'utils/component.mjs';
 import { createVirtualElement } from 'utils/vdom.mjs';
 
-
 export default class Form extends Component {
 	constructor(props) {
 		super(props);
@@ -17,7 +16,11 @@ export default class Form extends Component {
 			attributes: { class: 'result-list'},
 			// events: { submit: this.submit},
 			children: [
-				createVirtualElement('input', {attributes: { type: 'text'}, events: { input: this.input }})			]
+				createVirtualElement('input', {
+					attributes: { type: 'text'}, 
+					events: { input: this.input }
+				})
+			]
 		});
 	}
 

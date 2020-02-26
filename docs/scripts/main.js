@@ -438,41 +438,41 @@
   	}
   }
 
-  class Home extends Component {
-  	createVirtualComponent(){
-  		return createVirtualElement('main', { 
-  			children: [
-  				// 
-  			]
-  		});
-  	}
-  }
-
-  // Event listener for back button
-  const back = (event) => {
+  // Event listener for back link
+  const previousPage = (event) => {
   	event.preventDefault();
   	window.history.back();
   };
 
-  // Links in the nav bar
-  const ulLinks = [
-  	createVirtualElement('li', {
-  		children: [ createVirtualElement('a', { 
+  // creates a li with an link to the previous page
+  const backLink = createVirtualElement('li', {
+  	children: [ 
+  		createVirtualElement('a', { 
   			attributes: { href: '#' }, 
-  			events: { 'click': back }, 
-  			children: ['Back'] })]
-  	}),
-  	createVirtualElement('li', {
-  		children: [ createVirtualElement('a', { 
-  			attributes: { href: '#home' }, 
-  			children: ['Home'] })]
-  	}),
-  	createVirtualElement('li', {
-  		children: [ createVirtualElement('a', {
-  			attributes: { href: '#search' }, 
-  			children: ['Search'] })]
-  	})
-  ];
+  			events: { 'click': previousPage }, 
+  			children: ['Back'] })
+  	]
+  });
+
+  // creates a li with link to a page
+  const createPageLink = (link) => {
+  	return createVirtualElement('li', { 
+  		children: [ 
+  			createVirtualElement('a', {
+  				attributes: { href: `#${link}` }, 
+  				children: [link]
+  			})
+  		]});
+  };
+
+  // creates the links in the navbar
+  const links = (links) => {
+  	return [ 
+  		backLink, 
+  		...links.map(createPageLink)
+  	];
+  };
+
 
   class Nav extends Component {
   	constructor(props) {
@@ -483,13 +483,19 @@
   		return createVirtualElement('nav', {
   			children: [
   				createVirtualElement('ul', {
-  					children: ulLinks
+  					children: links(props.pages)
   				}),
   				// nav bar
   			]
   		});
   	}
   }
+
+  // Creates a nav bar based on the pages
+  const nav = (hash, pages) => { 
+  	let newNav = new Nav({hash, pages});
+  	return newNav.createVirtualComponent(newNav.props, newNav.state);
+  };
 
   class Header extends Component {
   	constructor(props) {
@@ -500,21 +506,33 @@
   		return createVirtualElement('header', {
   			children: [
   				createVirtualElement('h1', {children: ['Game Explorer']}),
-  				createVirtualElement(Nav)
-  			]
-  		});
+  				nav(props.hash, props.pages)
+  			]});
   	}
   }
+
+  // Creates the header
+  const header = (hash, pages) => {
+  	const header = new Header({hash, pages});
+  	return header.createVirtualComponent(header.props, header.state);
+  };
+
 
   class App extends Component {
   	constructor(props) {
   		super(props);
-  		this.state.page = props && props.page ? new props.page() : Home;  // defaults to home(but should have dedicated error/notfound page)
+  		// Page
+  		this.state.hash = props.hash;
+  		this.state.page = props.page;
+
+  		// create the virtualElement and HTML element
   		this.virtualElement = this.createVirtualComponent(this.props, this.state);
   		this.base = renderHTMLElement(this.virtualElement);
   	}
 
-  	changePage(page){
+  	changePage([hash, page]){
+  		// changes the page and start diffing
+  		this.state.hash = hash;
   		this.state.page = page;
   		updateComponent(this);
   	}
@@ -523,14 +541,14 @@
   		return createVirtualElement('div', {
   			attributes: { class: 'app' },
   			children: [
-  				createVirtualElement(Header),
+  				header(state.hash, props.pages),
   				createVirtualElement(state.page)
   			]
   		});
   	}
   }
 
-  class Home$1 extends Component {
+  class Home extends Component {
   	createVirtualComponent(){
   		return createVirtualElement('main', { 
   			children: [
@@ -612,7 +630,11 @@
   			attributes: { class: 'result-list'},
   			// events: { submit: this.submit},
   			children: [
-  				createVirtualElement('input', {attributes: { type: 'text'}, events: { input: this.input }})			]
+  				createVirtualElement('input', {
+  					attributes: { type: 'text'}, 
+  					events: { input: this.input }
+  				})
+  			]
   		});
   	}
 
@@ -752,19 +774,27 @@
   	}
   }
 
-  const app = new App();
+  // attach the app to the dom
   const render = ($element, parent) => {
   	parent.appendChild($element);
   };
+  // Props for the app
+  const props = {
+  	pages: ['Home', 'Search'],
+  	hash: 'Home',
+  	page: Home
+  };
+
+  const app = new App(props); // Creates the app with the props
 
   render(app.base, document.body); // first time render (home is default state)
 
   routie({
-  	'home': () => app.changePage(Home$1),
-  	'search': () => app.changePage(Search)
+  	'home': () => app.changePage(['Home', Home]),
+  	'search': () => app.changePage(['Search', Search])
   });
 
-  routie('home');
+  // routie('home'); // sets the page at home
 
 })));
 //# sourceMappingURL=main.js.map
