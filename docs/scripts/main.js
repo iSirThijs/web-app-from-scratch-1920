@@ -297,68 +297,56 @@
   }
 
 
-  function diff($element, virtualElement, virtualNewElement, parent) {
-  	if($element) {
+  function diff($element, virtualElement, virtualNewElement) {
+  	// no new virtual element, old element needs to be removed
+  	if(!virtualNewElement) {
+  		$element.remove();
+  		return undefined;
+  	}
 
-  		// console.log($element, virtualElement, virtualNewElement, parent);
-  		// no new virtual element, old element needs to be removed
-  		if(!virtualNewElement) {
-  			$element.remove();
-  			return undefined;
-  		}
-
-  		// one of the virtual elements is text
-  		if (typeof virtualNewElement === 'string' || virtualElement === 'string') {
-  			if(virtualElement !== virtualNewElement) {
-  				// both string but different value OR one string one element
-  				// both cases render new node
-  				let $newNode = renderHTMLElement(virtualNewElement);
-  				$element.replaceWith($newNode);
-  				return $newNode;
-  			} else return $element; // both nodes are text with the same value
-  		}
-
-  		// totally different elements;
-  		if (virtualElement.tagName !== virtualNewElement.tagName) {
-
-  			// new node is a component /class
-  			if (typeof virtualNewElement.tagName === 'function') {
-  				const component = new virtualNewElement.tagName(virtualNewElement.props);
-  				const virtualComponent = component.createVirtualComponent(component.props, component.state);
-  				let $newNode = renderHTMLElement(virtualComponent);
-  		
-  				component.base = $newNode;
-  				component.virtualElement = virtualComponent;
-  				$element.replaceWith($newNode);
-  				return $newNode;
-  			}
-
+  	// one of the virtual elements is text
+  	if (typeof virtualNewElement === 'string' || virtualElement === 'string') {
+  		if(virtualElement !== virtualNewElement) {
+  			// both string but different value OR one string one element
+  			// both cases render new node
   			let $newNode = renderHTMLElement(virtualNewElement);
+  			$element.replaceWith($newNode);
+  			return $newNode;
+  		} else return $element; // both nodes are text with the same value
+  	}
+
+  	// totally different elements;
+  	if (virtualElement.tagName !== virtualNewElement.tagName) {
+
+  		// new node is a component /class
+  		if (typeof virtualNewElement.tagName === 'function') {
+  			const component = new virtualNewElement.tagName(virtualNewElement.props);
+  			const virtualComponent = component.createVirtualComponent(component.props, component.state);
+  			let $newNode = renderHTMLElement(virtualComponent);
+  	
+  			component.base = $newNode;
+  			component.virtualElement = virtualComponent;
   			$element.replaceWith($newNode);
   			return $newNode;
   		}
 
-  		// If the code reaches this, the element is the same, but either its attributes changed or its children need updating (or both)
-  		const patchAttrs = diffAttrs(virtualElement.attributes, virtualNewElement.attributes);
-  		const patchChildren = diffChildren(virtualElement.children, virtualNewElement.children);
-
-  		patchAttrs($element);
-  		patchChildren($element);
-
-  		// Update the old virtualElement with the updates
-  		virtualElement.children = virtualNewElement.children;
-  		virtualElement.attributes = virtualNewElement.attributes;
-
-  		return $element;
-  		
-
-  	} else {
-  		// There is no $element so we append it to the parent
-  		// this is used to mount the app (or other loose components)
-  		const newDom = renderHTMLElement(virtualNewElement);
-  		parent.appendChild(newDom);
-  		return newDom;
+  		let $newNode = renderHTMLElement(virtualNewElement);
+  		$element.replaceWith($newNode);
+  		return $newNode;
   	}
+
+  	// If the code reaches this, the element is the same, but either its attributes changed or its children need updating (or both)
+  	const patchAttrs = diffAttrs(virtualElement.attributes, virtualNewElement.attributes);
+  	const patchChildren = diffChildren(virtualElement.children, virtualNewElement.children);
+
+  	patchAttrs($element);
+  	patchChildren($element);
+
+  	// Update the old virtualElement with the updates
+  	virtualElement.children = virtualNewElement.children;
+  	virtualElement.attributes = virtualNewElement.attributes;
+
+  	return $element;
   }
 
   function diffAttrs(oldAttrs, newAttrs) {
@@ -438,86 +426,6 @@
   	}
   }
 
-  // Event listener for back link
-  const previousPage = (event) => {
-  	event.preventDefault();
-  	window.history.back();
-  };
-
-  // creates a li with an link to the previous page
-  const backLink = createVirtualElement('li', {
-  	children: [ 
-  		createVirtualElement('a', { 
-  			attributes: { href: '#' }, 
-  			events: { 'click': previousPage }, 
-  			children: ['Back'] })
-  	]
-  });
-
-  // creates a li with link to a page
-  const createPageLink = (link) => {
-  	return createVirtualElement('li', { 
-  		children: [ 
-  			createVirtualElement('a', {
-  				attributes: { href: `#${link}` }, 
-  				children: [link]
-  			})
-  		]});
-  };
-
-  // creates the links in the navbar
-  const links = (links) => {
-  	return [ 
-  		backLink, 
-  		...links.map(createPageLink)
-  	];
-  };
-
-
-  class Nav extends Component {
-  	constructor(props) {
-  		super(props);
-  	}
-
-  	createVirtualComponent(props, state) {
-  		return createVirtualElement('nav', {
-  			children: [
-  				createVirtualElement('ul', {
-  					children: links(props.pages)
-  				}),
-  				// nav bar
-  			]
-  		});
-  	}
-  }
-
-  // Creates a nav bar based on the pages
-  const nav = (hash, pages) => { 
-  	let newNav = new Nav({hash, pages});
-  	return newNav.createVirtualComponent(newNav.props, newNav.state);
-  };
-
-  class Header extends Component {
-  	constructor(props) {
-  		super(props);
-  	}
-
-  	createVirtualComponent(props, state) {
-  		return createVirtualElement('header', {
-  			children: [
-  				createVirtualElement('h1', {children: ['Game Explorer']}),
-  				nav(props.hash, props.pages)
-  			]});
-  	}
-  }
-
-  // Creates the header
-  const header = (hash, pages) => {
-  	const header = new Header({hash, pages});
-  	return header.createVirtualComponent(header.props, header.state);
-  };
-
-
   class App extends Component {
   	constructor(props) {
   		super(props);
@@ -541,8 +449,6 @@
   		return createVirtualElement('div', {
   			attributes: { class: 'app' },
   			children: [
-  				header(state.hash, props.pages),
-  				createVirtualElement(state.page)
   			]
   		});
   	}
@@ -558,229 +464,13 @@
   	}
   }
 
-  /* 
-   * Module to append fetch with some additional modules
-   * based on https://codeburst.io/fetch-api-was-bringing-darkness-to-my-codebase-so-i-did-something-to-illuminate-it-7f2d8826e939
-   */
-
-  /**
-   * Checks if the response is 'ok'
-   * @param {*} response - the response object from a fetch request
-   * @returns {Promise<*>} if response is ok, resolves with the response. Else rejects with an error
-   */
-  const checkStatus = response => {
-  	if (response.ok) return response;
-  	else {
-  		const error = new Error(response.statusText || response.status);
-  		error.response = response;
-  		throw error;
-  	}
-  };
-
-  /**
-   * Parses a response to JSON
-   * @param {*} response - the response object from a fetch request
-   * @returns {Promise<*>} the parsed response object
-   */
-  const parseJSON = res => res.json();
-
-  /**
-   * Fetch with added utilities like check for status code and json parse
-   * @param {string} url - the url for this get request
-   * @param {*} [init] - An object containing any custom settings that you want to apply to the request
-   * @returns {Promise<*>} The resolved JSON parsed response if 200 Ok or rejection with the error reason
-   */
-  function get(url, init) {
-  	return fetch(url, init)
-  		.then(checkStatus)
-  		.then(parseJSON);
-  }
-
-  // This uses the URL Api : https://developer.mozilla.org/en-US/docs/Web/API/URL/URL
-  const baseURL = new URL('https://api.rawg.io/');
-
-  /**
-   * Get a list of games
-   * @param {String[]} [params] - An array of string with search queries, without the results will be random
-   * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
-   */
-  function gameList(params) {
-
-  	const gamesURL = new URL('/api/games', baseURL);
-  	const searchParams = new URLSearchParams(params);
-
-  	if (params) gamesURL.search = searchParams;
-
-  	return get(gamesURL);
-
-  }
-
-  class Form extends Component {
-  	constructor(props) {
-  		super(props);
-  		this.input = this.input.bind(this); // allows access to this component instead of the $element
-  	}
-
-  	input(event){
-  		this.props.setSearchQuery(event.target.value);
-  	}
-
-  	createVirtualComponent(props, state){
-  		return createVirtualElement('form', {
-  			attributes: { class: 'result-list'},
-  			// events: { submit: this.submit},
-  			children: [
-  				createVirtualElement('input', {
-  					attributes: { type: 'text'}, 
-  					events: { input: this.input }
-  				})
-  			]
-  		});
-  	}
-
-  }
-
-  class Component$1 {
-  	constructor(props) {
-  		this.props = props;
-  		this.state = {};
-  	}
-
-  	setState(state) {
-  		this.state = Object.assign({}, state);
-  		updateComponent(this);
-  	}
-  }
-
-  /**
-   * @module vdom Utilities for creating elements and usage with virtual dom
-   * based on: 
-   * https://dev.to/ycmjason/building-a-simple-virtual-dom-from-scratch-3d05
-   * https://medium.com/@aibolkussain/create-your-own-virtual-dom-to-understand-it-part-1-47b9b6fc6dfb
-   * https://medium.com/@aibolkussain/create-your-own-virtual-dom-to-understand-it-part-2-c85c4ffd15f0
-   */
-
-  /**
-   * Create a new virtual element
-   * @param {String} tagName - a String with the HTML node
-   * @param {*} [attributes] - the HTML attributes to be set on the node
-   * @param {String} [children] - the children of this node
-   * @returns A virtual element with the given options
-   */
-  function createVirtualElement$1(tagName, { attributes = {}, children = [], events = {}} = {}) {
-  	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
-
-  	Object.assign(virtualElement, {
-  		tagName,
-  		attributes,
-  		children,
-  		events
-  	});
-
-  	return virtualElement;
-  }
-
-  class ResultCard extends Component$1 {
-  	constructor(props) {
-  		super(props);
-  	}
-
-  	createVirtualComponent(props, state) {
-  		return createVirtualElement$1('article', {
-  			attributes: { id: props.id },
-  			children: [
-  				createVirtualElement$1('h3', {
-  					children: [props.name]
-  				})
-  			]
-  		});
-  	}
-  }
-
-  class GameList extends Component$1 {
-  	constructor(props) {
-  		super(props);
-  	}
-
-  	createVirtualComponent(props, state){
-  		return createVirtualElement$1('div', {
-  			attributes: { class: 'result-list'},
-  			children: [...props.results.map((result => {
-  				let resultCard = new ResultCard(result);
-  				return resultCard.createVirtualComponent(resultCard.props, resultCard.state);
-  			}))]
-  		});
-  	}
-
-  }
-
-  function transformToResultList(data) {
-  	return data.results.map((result) => {
-  		let { id, slug, name } = result;
-  		return { id, slug, name };
-  	});
-  }
-
-  class Search extends Component {
-  	constructor(props){
-  		super(props);
-
-  		this.state.apiQueryParams = {
-  			page_size: 10
-  		};
-
-  		this.state.results = [];
-
-  		this.form = new Form({setSearchQuery: this.setSearchQuery.bind(this)});
-  		this.gameList = new GameList({results: this.state.results});
-
-  	}
-
-  	setSearchQuery(query) {
-  		if(query.length < 3) {
-  			this.state.results = [];
-  			updateComponent(this);
-  		}
-  		else {
-  			this.state.apiQueryParams.search = query;
-  			this.getResults(this.state.apiQueryParams);
-  		}
-
-  	}
-
-  	getResults(params) {
-  		gameList(params)
-  			.then(transformToResultList) 
-  			.then((gameList) => {
-  				this.state.results = gameList;
-  				updateComponent(this);
-  			});
-  	}
-
-
-  	// setSearchOptions({search}){
-  	// 	this.state.search = search;
-  	// 	rawgAPI.gameList(this.state).then((data) => this.setResults(data.results));
-  	// }
-
-  	createVirtualComponent(props, state){
-  		let { form, gameList } = this;
-  		return createVirtualElement('main', { 
-  			children: [
-  				form.createVirtualComponent(form.props, form.state),
-  				gameList.createVirtualComponent(state, gameList.state)
-  			]
-  		});
-  	}
-  }
-
   // attach the app to the dom
   const render = ($element, parent) => {
   	parent.appendChild($element);
   };
-  // Props for the app
+
+  // Props for the app with default page(home)
   const props = {
-  	pages: ['Home', 'Search'],
   	hash: 'Home',
   	page: Home
   };
@@ -791,10 +481,7 @@
 
   routie({
   	'home': () => app.changePage(['Home', Home]),
-  	'search': () => app.changePage(['Search', Search])
   });
-
-  // routie('home'); // sets the page at home
 
 })));
 //# sourceMappingURL=main.js.map

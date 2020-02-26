@@ -73,68 +73,56 @@ export function updateComponent(component) {
 }
 
 
-export function diff($element, virtualElement, virtualNewElement, parent) {
-	if($element) {
+export function diff($element, virtualElement, virtualNewElement) {
+	// no new virtual element, old element needs to be removed
+	if(!virtualNewElement) {
+		$element.remove();
+		return undefined;
+	}
 
-		// console.log($element, virtualElement, virtualNewElement, parent);
-		// no new virtual element, old element needs to be removed
-		if(!virtualNewElement) {
-			$element.remove();
-			return undefined;
-		}
-
-		// one of the virtual elements is text
-		if (typeof virtualNewElement === 'string' || virtualElement === 'string') {
-			if(virtualElement !== virtualNewElement) {
-				// both string but different value OR one string one element
-				// both cases render new node
-				let $newNode = renderHTMLElement(virtualNewElement);
-				$element.replaceWith($newNode);
-				return $newNode;
-			} else return $element; // both nodes are text with the same value
-		}
-
-		// totally different elements;
-		if (virtualElement.tagName !== virtualNewElement.tagName) {
-
-			// new node is a component /class
-			if (typeof virtualNewElement.tagName === 'function') {
-				const component = new virtualNewElement.tagName(virtualNewElement.props);
-				const virtualComponent = component.createVirtualComponent(component.props, component.state);
-				let $newNode = renderHTMLElement(virtualComponent);
-		
-				component.base = $newNode;
-				component.virtualElement = virtualComponent;
-				$element.replaceWith($newNode);
-				return $newNode;
-			}
-
+	// one of the virtual elements is text
+	if (typeof virtualNewElement === 'string' || virtualElement === 'string') {
+		if(virtualElement !== virtualNewElement) {
+			// both string but different value OR one string one element
+			// both cases render new node
 			let $newNode = renderHTMLElement(virtualNewElement);
+			$element.replaceWith($newNode);
+			return $newNode;
+		} else return $element; // both nodes are text with the same value
+	}
+
+	// totally different elements;
+	if (virtualElement.tagName !== virtualNewElement.tagName) {
+
+		// new node is a component /class
+		if (typeof virtualNewElement.tagName === 'function') {
+			const component = new virtualNewElement.tagName(virtualNewElement.props);
+			const virtualComponent = component.createVirtualComponent(component.props, component.state);
+			let $newNode = renderHTMLElement(virtualComponent);
+	
+			component.base = $newNode;
+			component.virtualElement = virtualComponent;
 			$element.replaceWith($newNode);
 			return $newNode;
 		}
 
-		// If the code reaches this, the element is the same, but either its attributes changed or its children need updating (or both)
-		const patchAttrs = diffAttrs(virtualElement.attributes, virtualNewElement.attributes);
-		const patchChildren = diffChildren(virtualElement.children, virtualNewElement.children);
-
-		patchAttrs($element);
-		patchChildren($element);
-
-		// Update the old virtualElement with the updates
-		virtualElement.children = virtualNewElement.children;
-		virtualElement.attributes = virtualNewElement.attributes;
-
-		return $element;
-		
-
-	} else {
-		// There is no $element so we append it to the parent
-		// this is used to mount the app (or other loose components)
-		const newDom = renderHTMLElement(virtualNewElement);
-		parent.appendChild(newDom);
-		return newDom;
+		let $newNode = renderHTMLElement(virtualNewElement);
+		$element.replaceWith($newNode);
+		return $newNode;
 	}
+
+	// If the code reaches this, the element is the same, but either its attributes changed or its children need updating (or both)
+	const patchAttrs = diffAttrs(virtualElement.attributes, virtualNewElement.attributes);
+	const patchChildren = diffChildren(virtualElement.children, virtualNewElement.children);
+
+	patchAttrs($element);
+	patchChildren($element);
+
+	// Update the old virtualElement with the updates
+	virtualElement.children = virtualNewElement.children;
+	virtualElement.attributes = virtualNewElement.attributes;
+
+	return $element;
 }
 
 function diffAttrs(oldAttrs, newAttrs) {

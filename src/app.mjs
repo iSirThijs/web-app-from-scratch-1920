@@ -1,12 +1,5 @@
 import { createVirtualElement, updateComponent, renderHTMLElement} from 'utils/vdom.mjs';
-import Header from 'components/header/header.mjs';
 import Component from 'utils/component.mjs';
-
-// Creates the header
-const header = (hash, pages) => {
-	const header = new Header({hash, pages});
-	return header.createVirtualComponent(header.props, header.state);
-};
 
 
 export default class App extends Component {
@@ -32,8 +25,6 @@ export default class App extends Component {
 		return createVirtualElement('div', {
 			attributes: { class: 'app' },
 			children: [
-				header(state.hash, props.pages),
-				createVirtualElement(state.page)
 			]
 		});
 	}
