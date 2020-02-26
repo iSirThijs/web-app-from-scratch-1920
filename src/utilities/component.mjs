@@ -6,18 +6,11 @@ export default class Component {
 		this.props = props;
 		this.state = {};
 
-		this.virtualElement = this.createVirtualComponent(this.props, this.state);
-		this.base = renderHTMLElement(this.virtualElement);
-
 	}
 
 	setState(state) {
 		this.state = Object.assign({}, state);
 		updateComponent(this);
-	}
-
-	createVirtualComponent(props, state) {
-		return createVirtualElement('div');
 	}
 
 }

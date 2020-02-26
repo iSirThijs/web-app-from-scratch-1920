@@ -1,6 +1,6 @@
 import { createVirtualElement, updateComponent, renderHTMLElement} from 'utils/vdom.mjs';
 import Component from 'utils/component.mjs';
-
+import Header from './components/header.mjs';
 
 export default class App extends Component {
 	constructor(props) {
@@ -9,9 +9,9 @@ export default class App extends Component {
 		this.state.hash = props.hash;
 		this.state.page = props.page;
 
-		// create the virtualElement and HTML element
 		this.virtualElement = this.createVirtualComponent(this.props, this.state);
 		this.base = renderHTMLElement(this.virtualElement);
+	
 	}
 
 	changePage([hash, page]){
@@ -25,6 +25,7 @@ export default class App extends Component {
 		return createVirtualElement('div', {
 			attributes: { class: 'app' },
 			children: [
+				createVirtualElement(Header)
 			]
 		});
 	}

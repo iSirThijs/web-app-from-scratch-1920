@@ -419,9 +419,6 @@
   		this.props = props;
   		this.state = {};
 
-  		this.virtualElement = this.createVirtualComponent(this.props, this.state);
-  		this.base = renderHTMLElement(this.virtualElement);
-
   	}
 
   	setState(state) {
@@ -429,10 +426,30 @@
   		updateComponent(this);
   	}
 
-  	createVirtualComponent(props, state) {
-  		return createVirtualElement('div');
-  	}
+  }
 
+  const headerDefaults = {
+  	siteTitle: 'Game Explorer'
+  };
+
+
+
+  class Header extends Component {
+  	constructor(props){
+  		super(headerDefaults);
+  	
+  	}
+  	
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('header', {
+  			children: [
+  				createVirtualElement('h1', { children: [props.siteTitle]}),
+  				createVirtualElement('nav')
+  			]
+  		});
+
+  	}
   }
 
   class App extends Component {
@@ -441,7 +458,10 @@
   		// Page
   		this.state.hash = props.hash;
   		this.state.page = props.page;
-  		
+
+  		this.virtualElement = this.createVirtualComponent(this.props, this.state);
+  		this.base = renderHTMLElement(this.virtualElement);
+  	
   	}
 
   	changePage([hash, page]){
@@ -454,6 +474,9 @@
   	createVirtualComponent(props, state){
   		return createVirtualElement('div', {
   			attributes: { class: 'app' },
+  			children: [
+  				createVirtualElement(Header)
+  			]
   		});
   	}
   }
