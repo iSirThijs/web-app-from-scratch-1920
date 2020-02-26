@@ -418,12 +418,21 @@
   	constructor(props) {
   		this.props = props;
   		this.state = {};
+
+  		this.virtualElement = this.createVirtualComponent(this.props, this.state);
+  		this.base = renderHTMLElement(this.virtualElement);
+
   	}
 
   	setState(state) {
   		this.state = Object.assign({}, state);
   		updateComponent(this);
   	}
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('div');
+  	}
+
   }
 
   class App extends Component {
@@ -432,10 +441,7 @@
   		// Page
   		this.state.hash = props.hash;
   		this.state.page = props.page;
-
-  		// create the virtualElement and HTML element
-  		this.virtualElement = this.createVirtualComponent(this.props, this.state);
-  		this.base = renderHTMLElement(this.virtualElement);
+  		
   	}
 
   	changePage([hash, page]){
@@ -448,8 +454,6 @@
   	createVirtualComponent(props, state){
   		return createVirtualElement('div', {
   			attributes: { class: 'app' },
-  			children: [
-  			]
   		});
   	}
   }
