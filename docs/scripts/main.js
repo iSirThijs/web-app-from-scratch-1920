@@ -237,14 +237,15 @@
    * @param {String} [children] - the children of this node
    * @returns A virtual element with the given options
    */
-  function createVirtualElement(tagName, { attributes = {}, children = [], events = {}} = {}) {
+  function createVirtualElement(tagName, { props = {}, attributes = {}, children = [], events = {}} = {}) {
   	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
   	Object.assign(virtualElement, {
   		tagName,
   		attributes,
   		children,
-  		events
+  		events,
+  		props
   	});
 
   	return virtualElement;
@@ -260,7 +261,7 @@
   	// The virtual element is a string: return a text node
   	if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
   	
-  	let {tagName, attributes, children, events} = virtualElement;
+  	let {tagName, attributes, children, events, props} = virtualElement;
   	let $element;
 
   	if (typeof tagName === 'string') {
@@ -277,7 +278,7 @@
   		}
 
   	} else if(typeof tagName === 'function') {
-  		const component = new tagName();
+  		const component = new tagName(props);
   		const renderedComponent = component.createVirtualComponent(component.props, component.state);
   		$element = renderHTMLElement(renderedComponent);
   		
@@ -428,11 +429,26 @@
 
   }
 
-  function transformToResultList(data) {
-  	return data.results.map((result) => {
-  		let { id, slug, name } = result;
-  		return { id, slug, name };
-  	});
+  class EasySearchForm extends Component {
+  	constructor(props){
+  		super(props);
+  		this.props.input = (event) => {
+  			// creates a tiny delay on typing
+  			if (this.typingTimer)clearTimeout(this.typingTimer); 
+  			this.typingTimer = setTimeout(() => props.parent.apiQueryState = event.target.value, 500 );
+  		};
+  	}
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('form', {
+  			events: {'submit': (event) => event.preventDefault()},
+  			children: [
+  				createVirtualElement('input', {attributes: {type: 'text', placeholder: 'search for a game, tag or person'}, events: {input: props.input}}),
+  				// createVirtualElement('button', {attributes: {type: 'submit'}, children: ['Search'], events: {'submit': (event) => event.preventDefault()}})
+  			]
+  		});
+  	}
+
   }
 
   /* 
@@ -477,13 +493,14 @@
   const baseURL = new URL('https://api.rawg.io/');
 
   /**
-   * Get a list of games
+   * Get a list of games/developers/creators/
+   * @param {Stirng} [endpoint] - A stirng with the endpoint
    * @param {String[]} [params] - An array of string with search queries, without the results will be random
    * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
    */
-  function gameList(params) {
+  function list(endpoint, params) {
 
-  	const gamesURL = new URL('/api/games', baseURL);
+  	const gamesURL = new URL(`/api/${endpoint}`, baseURL);
   	const searchParams = new URLSearchParams(params);
 
   	if (params) gamesURL.search = searchParams;
@@ -492,108 +509,105 @@
 
   }
 
-  // backbutton atom
-  const backButton = () => {
-  	const previousPage = (event) => {
-  		event.preventDefault();
-  		window.history.back();
-  	};
-
-  	return createVirtualElement('button', {children: ['back'], events: {click: previousPage}});
-  };
-
-  // form molecule
-  class easySearchForm extends Component {
+  class EasySearchResult extends Component {
   	constructor(props){
   		super(props);
-  		this.props.input = (event) => {
-  			props.parent.apiQueryState = event.target.value;
-  		};
+  		this.props.class = ['easy-search-result', props.category ];
+  		this.state.result = createVirtualElement('div', {children: ['loading...']});
+
+  		this.getApiResults(this.props, this.state);
   	}
 
-  	createVirtualComponent(props, state) {
-  		return createVirtualElement('form', {
+  	getApiResults(props, state){
+  		console.log(props.apiQuery);
+  		list(props.category, props.apiQuery)
+  			.then((list) => list.results)
+  			.then((results) => {
+  				
+  				let list = createVirtualElement('ul', {
+  					children:  [
+  						...results.map((result) => {
+  							return createVirtualElement('li', {
+  								children: [
+  									createVirtualElement('a', {
+  										attributes: { href: `#${props.category}/${result.slug}`},
+  										children: [ createVirtualElement('h4', {children: [result.name]})]
+  									})
+  								]
+  							});
+  						})
+  					]
+  				});
+
+  				
+
+
+  				this.state.result = list;
+  				updateComponent(this);
+  			});// save data in state
+  	}
+
+
+
+  	createVirtualComponent(props, state){
+  		return createVirtualElement('div', {
+  			// attributes: { class: props.class.join(' ')},
   			children: [
-  				createVirtualElement('input', {attributes: {type: 'text'}, events: {input: props.input}}),
-  				createVirtualElement('button', {attributes: {type: 'submit'}, children: ['Search']})
+  				createVirtualElement('h3', {children: [ props.category ]}),
+  				state.result
   			]
   		});
   	}
 
   }
-
-  const form = (props) => {
-  	let newForm = new easySearchForm(props);
-  	return newForm.createVirtualComponent(newForm.props, newForm.state);
-  };
-
-  // easySearch list
-  class easySearchList extends Component {
-  	constructor(props){
-  		super(props);
-  		this.state.results = props.results;
-
-  	}
-
-  	createVirtualComponent(props, state) {
-  		return createVirtualElement('ul', {
-  			children: [
-  				...state.results.map((result) => {
-  					return createVirtualElement('li', {
-  						attributes: { id: result.id },
-  						children: [
-  							createVirtualElement('h4', {children: [result.name]})
-  						]
-  					});
-  				})
-  			]
-  		});
-  	}
-  }
-
-  const list = (props) => {
-  	const newList = new easySearchList(props);
-  	return newList.createVirtualComponent(newList.props, newList.state);
-  };
-
 
   // nav component
-  class Nav extends Component {
+  class EasySearch extends Component {
   	constructor(props) {
   		super(props);
+  		this.props = {};
 
-  		this.state.results = [];
 
+  		// categories are the endpoint where you can search with a query
+  		this.props.categories = ['games','tags', 'creators', 'developers' ]; 
+  		this.props.id = 'easy-search';
   		this.state.apiQuery = {
-  			page_size: 10
+  			search: undefined,
+  			page_size: 5
   		};
+
+  		this.state.results = [createVirtualElement('div')];
 
   	}
 
   	set apiQueryState(search) {
-  		if (search.length < 3 ) this.apiResultsState = [];
+  		this.state.apiQuery.search = search;
+  		if(search.length == 0) this.results = [createVirtualElement('div')];
+  		else if(search.length > 0 && search.length < 3) this.results = [createVirtualElement('div', { attributes: {class: 'easySearchInfo'}, children: ['Keep typing to search']})];
   		else {
-  			this.state.apiQuery.search = search;
-
-  			// there should be more results from different endpoints here(games, developers, creators etc)
-  			gameList(this.state.apiQuery)
-  				.then(transformToResultList)
-  				.then((results) => this.apiResultsState = results);
+  			this.results = [];
+  			this.results = this.props.categories.map((category) =>{
+  				return createVirtualElement(EasySearchResult, { 
+  					props: { 
+  						category: category,
+  						apiQuery: this.state.apiQuery 
+  					}
+  				});
+  			});
   		}
-  	
   	}
 
-  	set apiResultsState(results) {
+  	set results(results) {
   		this.state.results = results;
   		updateComponent(this);
   	}
 
   	createVirtualComponent(props, state) {
-  		return createVirtualElement('nav', {
+  		return createVirtualElement('div', {
+  			attributes: { id: props.id },
   			children: [
-  				backButton(),
-  				form({parent: this}),
-  				list({results: state.results})
+  				createVirtualElement(EasySearchForm, {props: {parent: this}}),
+  				...state.results
   			]
   		});
   	}
@@ -609,13 +623,12 @@
   		super(headerDefaults);
   	
   	}
-  	
 
   	createVirtualComponent(props, state) {
   		return createVirtualElement('header', {
   			children: [
   				createVirtualElement('h1', { children: [props.siteTitle]}),
-  				createVirtualElement(Nav)
+  				createVirtualElement(EasySearch)
   			]
   		});
 

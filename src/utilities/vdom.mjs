@@ -13,14 +13,15 @@
  * @param {String} [children] - the children of this node
  * @returns A virtual element with the given options
  */
-export function createVirtualElement(tagName, { attributes = {}, children = [], events = {}} = {}) {
+export function createVirtualElement(tagName, { props = {}, attributes = {}, children = [], events = {}} = {}) {
 	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
 	Object.assign(virtualElement, {
 		tagName,
 		attributes,
 		children,
-		events
+		events,
+		props
 	});
 
 	return virtualElement;
@@ -36,7 +37,7 @@ export function renderHTMLElement(virtualElement) {
 	// The virtual element is a string: return a text node
 	if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
 	
-	let {tagName, attributes, children, events} = virtualElement;
+	let {tagName, attributes, children, events, props} = virtualElement;
 	let $element;
 
 	if (typeof tagName === 'string') {
@@ -53,7 +54,7 @@ export function renderHTMLElement(virtualElement) {
 		}
 
 	} else if(typeof tagName === 'function') {
-		const component = new tagName();
+		const component = new tagName(props);
 		const renderedComponent = component.createVirtualComponent(component.props, component.state);
 		$element = renderHTMLElement(renderedComponent);
 		

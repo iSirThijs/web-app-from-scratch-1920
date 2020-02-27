@@ -1,6 +1,6 @@
 import Component from 'utils/component.mjs';
 import { createVirtualElement } from 'utils/vdom.mjs';
-import Nav from 'components/nav.mjs';
+import EasySearch from 'components/easy-search.mjs';
 
 const headerDefaults = {
 	siteTitle: 'Game Explorer'
@@ -12,13 +12,12 @@ export default class Header extends Component {
 		super(headerDefaults);
 	
 	}
-	
 
 	createVirtualComponent(props, state) {
 		return createVirtualElement('header', {
 			children: [
 				createVirtualElement('h1', { children: [props.siteTitle]}),
-				createVirtualElement(Nav)
+				createVirtualElement(EasySearch)
 			]
 		});
 
