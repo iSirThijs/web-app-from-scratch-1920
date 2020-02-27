@@ -1,23 +1,32 @@
-import { createVirtualElement, diff} from './utilities/vdom.mjs';
+import { createVirtualElement, updateComponent, renderHTMLElement} from 'utils/vdom.mjs';
+import Component from 'utils/component.mjs';
 import Header from './components/header.mjs';
-import Component from './utilities/component.mjs';
-import Overview from './pages/overview.mjs';
 
+export default class App extends Component {
+	constructor(props) {
+		super(props);
+		// Page
+		this.state.hash = props.hash;
+		this.state.page = props.page;
 
-class App extends Component {
-	createVirtualComponent(){
+		this.virtualElement = this.createVirtualComponent(this.props, this.state);
+		this.base = renderHTMLElement(this.virtualElement);
+	
+	}
+
+	changePage([hash, page]){
+		// changes the page and start diffing
+		this.state.hash = hash;
+		this.state.page = page;
+		updateComponent(this);
+	}
+
+	createVirtualComponent(props, state){
 		return createVirtualElement('div', {
 			attributes: { class: 'app' },
 			children: [
-				createVirtualElement(Header),
-				createVirtualElement(Overview)
+				createVirtualElement(Header)
 			]
 		});
 	}
 }
-
-const render = (vnode, parent) => {
-	diff(undefined, undefined, vnode, parent);
-};
-
-render(createVirtualElement(App), document.body);

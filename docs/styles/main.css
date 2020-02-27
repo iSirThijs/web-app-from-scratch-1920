@@ -1,0 +1,135 @@
+body {
+	box-sizing: border-box;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+	background:rgb(25, 25, 25);
+	color: whitesmoke;
+	margin: 0;
+	padding: 0;
+	/* overflow: hidden; */
+}
+
+body * {
+	box-sizing: inherit;
+}
+
+header {
+	min-width: 100%;
+	padding: .3em;
+}
+
+header > * {
+	width: 100%;
+	padding: .5rem 0;
+}
+
+header h1 {
+	margin: 0;
+	font-size: 1.2rem;
+}
+
+#easy-search {
+	background:rgb(25, 25, 25);
+	max-height: 100%;
+	text-align: center;
+	/* position: relative;
+	top: 0; */
+	/* transition: top ease-in .25s ; */
+
+}
+
+#easy-search > * {
+	text-align: initial;
+	width: 90%;
+	margin: 0 auto;
+}
+
+/* form element */
+
+.hidden {
+	display: none;
+	font-size: .8rem;
+	font-style: italic;
+	color: rgb(100, 100, 100);
+	width: 100%;
+	height: 1em;
+	margin-top: 1em;
+	text-align: center;;
+}
+
+/* #easy-search form {
+	position: fixed;
+	top: 0;
+} */
+
+#easy-search form:focus-within + div.hidden {
+	display: block;
+}
+
+
+#easy-search input[type=text] {
+	width: 100%;
+	height: 3em;
+	border: solid 1px rgb(100, 100, 100);
+	border-radius: 10px;
+	margin: 0 auto;
+	padding: 0 15px;
+	background-color: rgb(75, 75, 75);
+	color: whitesmoke;
+	transition: width ease-in-out .25s;
+}
+
+
+/* results */
+.easy-search-result ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.easy-search-result h3 {
+	font-size: 16px;
+	text-transform: capitalize;
+	margin: 1em 0 .5em;
+	text-decoration: underline;
+}
+
+.easy-search-result a {
+	display: flex;
+	text-decoration: none;
+	color: inherit;
+}
+
+.easy-search-result h4 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: normal;
+}
+
+/* tags styling */
+.easy-search-result.tags ul {
+	display: flex;
+	flex-flow: row wrap;
+}
+
+.tags li {
+	margin: .2em;
+	
+}
+
+.tags a {
+	border: 1px solid rgb(100, 100, 100);
+	border-radius: 5px;
+	background-color: rgb(75, 75, 75);
+	padding: .4em;
+	justify-content: center;
+	align-items: center;
+}
+
+
+@media only screen and (min-device-width : 420px){
+	/* Styles */
+	header {
+		min-width: auto;
+		max-width: 420px;
+	}
+}

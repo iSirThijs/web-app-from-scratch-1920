@@ -13,14 +13,15 @@
  * @param {String} [children] - the children of this node
  * @returns A virtual element with the given options
  */
-export function createVirtualElement(tagName, { attributes = {}, children = [], events = {}} = {}) {
+export function createVirtualElement(tagName, { props = {}, attributes = {}, children = [], events = {}} = {}) {
 	const virtualElement = Object.create(null); // this makes the virtualElement pure, by not having a prototype
 
 	Object.assign(virtualElement, {
 		tagName,
 		attributes,
 		children,
-		events
+		events,
+		props
 	});
 
 	return virtualElement;
@@ -36,7 +37,7 @@ export function renderHTMLElement(virtualElement) {
 	// The virtual element is a string: return a text node
 	if (typeof virtualElement === 'string')	return document.createTextNode(virtualElement);
 	
-	let {tagName, attributes, children, events} = virtualElement;
+	let {tagName, attributes, children, events, props} = virtualElement;
 	let $element;
 
 	if (typeof tagName === 'string') {
@@ -53,7 +54,7 @@ export function renderHTMLElement(virtualElement) {
 		}
 
 	} else if(typeof tagName === 'function') {
-		const component = new tagName();
+		const component = new tagName(props);
 		const renderedComponent = component.createVirtualComponent(component.props, component.state);
 		$element = renderHTMLElement(renderedComponent);
 		
@@ -72,68 +73,57 @@ export function updateComponent(component) {
 	component.base = diff(component.base, component.virtualElement, virtualComponent);
 }
 
-export function diff($element, virtualElement, virtualNewElement, parent) {
-	if($element) {
 
-		// console.log($element, virtualElement, virtualNewElement, parent);
-		// no new virtual element, old element needs to be removed
-		if(!virtualNewElement) {
-			$element.remove();
-			return undefined;
-		}
+export function diff($element, virtualElement, virtualNewElement) {
+	// no new virtual element, old element needs to be removed
+	if(!virtualNewElement) {
+		$element.remove();
+		return undefined;
+	}
 
-		// one of the virtual elements is text
-		if (typeof virtualNewElement === 'string' || virtualElement === 'string') {
-			if(virtualElement !== virtualNewElement) {
-				// both string but different value OR one string one element
-				// both cases render new node
-				let $newNode = renderHTMLElement(virtualNewElement);
-				$element.replaceWith($newNode);
-				return $newNode;
-			} else return $element; // both nodes are text with the same value
-		}
-
-		// totally different elements;
-		if (virtualElement.tagName !== virtualNewElement.tagName) {
-
-			// new node is a component /class
-			if (typeof virtualNewElement.tagName === 'function') {
-				const component = new virtualNewElement.tagName(virtualNewElement.props);
-				const virtualComponent = component.render(component.props, component.state);
-				let $newNode = renderHTMLElement(virtualComponent);
-		
-				component.base = $newNode;
-				component.virtualElement = virtualComponent;
-				$element.replaceWith($newNode);
-				return $newNode;
-			}
-
+	// one of the virtual elements is text
+	if (typeof virtualNewElement === 'string' || virtualElement === 'string') {
+		if(virtualElement !== virtualNewElement) {
+			// both string but different value OR one string one element
+			// both cases render new node
 			let $newNode = renderHTMLElement(virtualNewElement);
+			$element.replaceWith($newNode);
+			return $newNode;
+		} else return $element; // both nodes are text with the same value
+	}
+
+	// totally different elements;
+	if (virtualElement.tagName !== virtualNewElement.tagName) {
+
+		// new node is a component /class
+		if (typeof virtualNewElement.tagName === 'function') {
+			const component = new virtualNewElement.tagName(virtualNewElement.props);
+			const virtualComponent = component.createVirtualComponent(component.props, component.state);
+			let $newNode = renderHTMLElement(virtualComponent);
+	
+			component.base = $newNode;
+			component.virtualElement = virtualComponent;
 			$element.replaceWith($newNode);
 			return $newNode;
 		}
 
-		// If the code reaches this, the element is the same, but either its attributes changed or its children need updating (or both)
-		const patchAttrs = diffAttrs(virtualElement.attributes, virtualNewElement.attributes);
-		const patchChildren = diffChildren(virtualElement.children, virtualNewElement.children);
-
-		patchAttrs($element);
-		patchChildren($element);
-
-		// Update the old virtualElement with the updates
-		virtualElement.children = virtualNewElement.children;
-		virtualElement.attributes = virtualNewElement.attributes;
-
-		return $element;
-		
-
-	} else {
-		// There is no $element so we append it to the parent
-		// this is used to mount the app (or other loose components)
-		const newDom = renderHTMLElement(virtualNewElement);
-		parent.appendChild(newDom);
-		return newDom;
+		let $newNode = renderHTMLElement(virtualNewElement);
+		$element.replaceWith($newNode);
+		return $newNode;
 	}
+
+	// If the code reaches this, the element is the same, but either its attributes changed or its children need updating (or both)
+	const patchAttrs = diffAttrs(virtualElement.attributes, virtualNewElement.attributes);
+	const patchChildren = diffChildren(virtualElement.children, virtualNewElement.children);
+
+	patchAttrs($element);
+	patchChildren($element);
+
+	// Update the old virtualElement with the updates
+	virtualElement.children = virtualNewElement.children;
+	virtualElement.attributes = virtualNewElement.attributes;
+
+	return $element;
 }
 
 function diffAttrs(oldAttrs, newAttrs) {
