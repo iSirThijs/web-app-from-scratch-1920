@@ -13,7 +13,6 @@ export default class EasySearchResult extends Component {
 	}
 
 	getApiResults(props, state){
-		console.log(props.apiQuery);
 		rawgAPI.list(props.category, props.apiQuery)
 			.then((list) => list.results)
 			.then((results) => {
@@ -45,7 +44,7 @@ export default class EasySearchResult extends Component {
 
 	createVirtualComponent(props, state){
 		return createVirtualElement('div', {
-			// attributes: { class: props.class.join(' ')},
+			attributes: { class: props.class.join(' ')},
 			children: [
 				createVirtualElement('h3', {children: [ props.category ]}),
 				state.result

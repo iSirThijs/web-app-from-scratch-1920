@@ -18,15 +18,15 @@ export default class EasySearch extends Component {
 			page_size: 5
 		};
 
-		this.state.results = [createVirtualElement('div')];
+		this.state.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Start typing to search']})];
 
 	}
 
 	set apiQueryState(search) {
 		this.state.apiQuery.search = search;
-		if(search.length == 0) this.results = [createVirtualElement('div')];
-		else if(search.length > 0 && search.length < 3) this.results = [createVirtualElement('div', { attributes: {class: 'easySearchInfo'}, children: ['Keep typing to search']})];
-		else {
+		if( search.length == 0 ) this.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Start typing to search']})];
+		if( search.length > 0 && search.length < 3) this.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Keep typing to search']})];
+		else if(search.length >= 3) {
 			this.results = [];
 			this.results = this.props.categories.map((category) =>{
 				return createVirtualElement(EasySearchResult, { 
