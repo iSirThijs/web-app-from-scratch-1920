@@ -28,9 +28,11 @@ export default class EasySearchResult extends Component {
 									})
 								]
 							});
-						})
+						}),
+						props.category == 'games' ? createVirtualElement('a', {attributes: {class: 'more-results',href: `#search/search=${props.apiQuery.search}`}, children: ['more results']}) : ''
 					]
 				});
+
 
 				this.state.result = list;
 				updateComponent(this);

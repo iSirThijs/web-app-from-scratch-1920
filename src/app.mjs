@@ -32,7 +32,7 @@ export default class App extends Component {
 			attributes: { class: 'app' },
 			children: [
 				createVirtualElement(Header),
-				page(state.page, {slug: state.slug})
+				page(state.page, {param: state.param})
 			]
 		});
 	}

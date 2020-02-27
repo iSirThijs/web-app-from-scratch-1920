@@ -547,9 +547,11 @@
   									})
   								]
   							});
-  						})
+  						}),
+  						props.category == 'games' ? createVirtualElement('a', {attributes: {class: 'more-results',href: `#search/search=${props.apiQuery.search}`}, children: ['more results']}) : ''
   					]
   				});
+
 
   				this.state.result = list;
   				updateComponent(this);
@@ -673,7 +675,7 @@
   			attributes: { class: 'app' },
   			children: [
   				createVirtualElement(Header),
-  				page(state.page, {slug: state.slug})
+  				page(state.page, {param: state.param})
   			]
   		});
   	}
@@ -692,7 +694,7 @@
   		super(props);
   		this.state.gameData = [createVirtualElement('div', {children: ['loading...']})];
   		// kick off api get
-  		this.getGameDetailData(this.props.slug);
+  		this.getGameDetailData(this.props.param);
   	}
 
   	getGameDetailData(slug) {
@@ -729,6 +731,109 @@
   	}
   }
 
+  class SearchForm extends Component {
+  	constructor(props){
+  		super(props);
+  		this.props.submit = (event) => {
+  			event.preventDefault();
+  			let targets = Object.values(event.target);
+
+  			let search = targets.reduce((searchParams, target) => {
+  				if(target.name) searchParams[target.name] = target.value;
+  				return searchParams;
+
+  			}, {});
+
+  			props.parent.setApiQuery = search;
+  		};
+  	}
+
+  	createVirtualComponent(props, state) {
+  		return createVirtualElement('form', {
+  			events: {'submit': props.submit },
+  			children: [
+  				createVirtualElement('input', {attributes: {name: 'search', type: 'text', value: props.value}}),
+  				createVirtualElement('button', {attributes: {type: 'submit'}, children: ['Search']})
+  			]
+  		});
+  	}
+
+  }
+
+  class Search extends Component {
+  	constructor(props) {
+  		super(props);
+
+  		this.state.apiQuery = {
+  			search: undefined,
+  			page_size: 10
+  		};
+
+  		Object.assign(this.state.apiQuery, parseQueryString(props.param));
+
+  		this.state.result = [createVirtualElement('div', {children: ['loading...']})];
+  		
+  		// kick off api get
+  		this.getApiResults(this.props, this.state);
+  	}
+
+  	// setter for apiQuery
+  	set setApiQuery(search){
+  		Object.assign(this.state.apiQuery, search);
+  		this.getApiResults(this.props, this.state);
+  	}
+
+  	getApiResults(props, state){
+  		this.state.result = [createVirtualElement('div', {children: ['loading...']})];
+  		list('games', state.apiQuery)
+  			.then((list) => list.results)
+  			.then((results) => {
+  				
+  				let list = createVirtualElement('ul', {
+  					children:  [
+  						...results.map((result) => {
+  							return createVirtualElement('li', {
+  								children: [
+  									createVirtualElement('a', {
+  										attributes: { href: `#games/${result.slug}`},
+  										children: [ createVirtualElement('h4', {children: [result.name]})]
+  									})
+  								]
+  							});
+  						}),
+  					]
+  				});
+
+  				this.state.result = [list];
+  				updateComponent(this);
+  			});// save data in state
+  	}
+
+
+  	createVirtualComponent(props, state){
+  		return createVirtualElement('main', {
+  			attributes: {id: 'search', class: 'page'},
+  			children: [ 
+  				createVirtualElement('h2', {children: ['Advanced Search']}),
+  				createVirtualElement(SearchForm, {props: {parent: this, value: state.apiQuery.search}}),
+  				// search input //
+  				// filter and sort controls/submit -> updates state of this(sent parent as prop)
+  				...state.result // results (lazy loading needs to be added later)
+  			]
+  		});
+  	}
+
+
+  }
+
+  function parseQueryString(string){
+  	let andSplit = string.split('&');
+  	let equalSplit = andSplit.map((andSplitted) => andSplitted.split('='));
+
+  	let queries = Object.fromEntries(equalSplit);
+  	return queries;
+  }
+
   // attach the app to the dom
   const render = ($element, parent) => {
   	parent.appendChild($element);
@@ -746,7 +851,8 @@
 
   routie({
   	'home': () => app.changePage({page: Home}),
-  	'games/:slug': (slug) =>app.changePage({page: Games, slug}) 
+  	'games/:slug': (slug) =>app.changePage({page: Games, param: slug}),
+  	'search/:query': (query) => app.changePage({page: Search, param: query})
   });
 
   // routie('home');

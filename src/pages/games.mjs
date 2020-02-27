@@ -7,7 +7,7 @@ export default class Games extends Component {
 		super(props);
 		this.state.gameData = [createVirtualElement('div', {children: ['loading...']})];
 		// kick off api get
-		this.getGameDetailData(this.props.slug);
+		this.getGameDetailData(this.props.param);
 	}
 
 	getGameDetailData(slug) {
