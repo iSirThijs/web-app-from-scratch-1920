@@ -32,9 +32,6 @@ export default class EasySearchResult extends Component {
 					]
 				});
 
-				
-
-
 				this.state.result = list;
 				updateComponent(this);
 			});// save data in state

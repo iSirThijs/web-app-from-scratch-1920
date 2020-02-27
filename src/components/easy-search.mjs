@@ -11,21 +11,21 @@ export default class EasySearch extends Component {
 
 
 		// categories are the endpoint where you can search with a query
-		this.props.categories = ['games','tags', 'creators', 'developers' ]; 
+		this.props.categories = ['games' ]; 
 		this.props.id = 'easy-search';
 		this.state.apiQuery = {
 			search: undefined,
 			page_size: 5
 		};
 
-		this.state.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Start typing to search']})];
+		this.state.results = [createVirtualElement('div', { attributes: {class: 'search-info hidden'}, children: ['Start typing to search']})];
 
 	}
 
 	set apiQueryState(search) {
 		this.state.apiQuery.search = search;
-		if( search.length == 0 ) this.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Start typing to search']})];
-		if( search.length > 0 && search.length < 3) this.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Keep typing to search']})];
+		if( search.length == 0 ) this.results = [createVirtualElement('div', { attributes: {class: 'search-info hidden'}, children: ['Start typing to search']})];
+		if( search.length > 0 && search.length < 3) this.results = [createVirtualElement('div', { attributes: {class: 'search-info hidden'}, children: ['Keep typing to search']})];
 		else if(search.length >= 3) {
 			this.results = [];
 			this.results = this.props.categories.map((category) =>{

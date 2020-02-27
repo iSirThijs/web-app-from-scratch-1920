@@ -19,3 +19,16 @@ export function list(endpoint, params) {
 	return Fetcher.get(gamesURL);
 
 }
+/**
+ * Get a list of games/developers/creators/
+ * @param {Stirng} [endpoint] - A stirng with the endpoint
+ * @param {String[]} [params] - An array of string with search queries, without the results will be random
+ * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
+ */
+export function gameDetails(id) {
+
+	const gamesURL = new URL(`/api/games/${id}`, baseURL);
+	
+	return Fetcher.get(gamesURL);
+
+}

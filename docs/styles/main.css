@@ -27,39 +27,38 @@ header h1 {
 	font-size: 1.2rem;
 }
 
+/* easy search */
 #easy-search {
 	background:rgb(25, 25, 25);
-	max-height: 100%;
 	text-align: center;
-	/* position: relative;
-	top: 0; */
-	/* transition: top ease-in .25s ; */
-
+	overflow: hidden;
 }
 
 #easy-search > * {
 	text-align: initial;
 	width: 90%;
-	margin: 0 auto;
 }
 
 /* form element */
+#easy-search form {
+	margin: 0 auto;
+}
 
-.hidden {
-	display: none;
+.search-info {
 	font-size: .8rem;
 	font-style: italic;
 	color: rgb(100, 100, 100);
 	width: 100%;
 	height: 1em;
+	margin: 0 auto;
 	margin-top: 1em;
 	text-align: center;;
 }
 
-/* #easy-search form {
-	position: fixed;
-	top: 0;
-} */
+.hidden {
+	display: none;
+	
+}
 
 #easy-search form:focus-within + div.hidden {
 	display: block;
@@ -80,6 +79,10 @@ header h1 {
 
 
 /* results */
+.easy-search-result {
+	margin: 0 auto;
+}
+
 .easy-search-result ul {
 	list-style: none;
 	margin: 0;
@@ -123,6 +126,21 @@ header h1 {
 	padding: .4em;
 	justify-content: center;
 	align-items: center;
+}
+
+/* pages */
+.page {
+	padding: 1em;
+	width: 100%;
+}
+
+.page p {
+	font-size: .8em;
+}
+
+.page h2 {
+	font-size: 1rem;
+	margin: 0
 }
 
 

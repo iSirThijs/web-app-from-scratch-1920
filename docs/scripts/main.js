@@ -508,6 +508,19 @@
   	return get(gamesURL);
 
   }
+  /**
+   * Get a list of games/developers/creators/
+   * @param {Stirng} [endpoint] - A stirng with the endpoint
+   * @param {String[]} [params] - An array of string with search queries, without the results will be random
+   * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
+   */
+  function gameDetails(id) {
+
+  	const gamesURL = new URL(`/api/games/${id}`, baseURL);
+  	
+  	return get(gamesURL);
+
+  }
 
   class EasySearchResult extends Component {
   	constructor(props){
@@ -538,9 +551,6 @@
   					]
   				});
 
-  				
-
-
   				this.state.result = list;
   				updateComponent(this);
   			});// save data in state
@@ -568,21 +578,21 @@
 
 
   		// categories are the endpoint where you can search with a query
-  		this.props.categories = ['games','tags', 'creators', 'developers' ]; 
+  		this.props.categories = ['games' ]; 
   		this.props.id = 'easy-search';
   		this.state.apiQuery = {
   			search: undefined,
   			page_size: 5
   		};
 
-  		this.state.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Start typing to search']})];
+  		this.state.results = [createVirtualElement('div', { attributes: {class: 'search-info hidden'}, children: ['Start typing to search']})];
 
   	}
 
   	set apiQueryState(search) {
   		this.state.apiQuery.search = search;
-  		if( search.length == 0 ) this.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Start typing to search']})];
-  		if( search.length > 0 && search.length < 3) this.results = [createVirtualElement('div', { attributes: {class: 'hidden'}, children: ['Keep typing to search']})];
+  		if( search.length == 0 ) this.results = [createVirtualElement('div', { attributes: {class: 'search-info hidden'}, children: ['Start typing to search']})];
+  		if( search.length > 0 && search.length < 3) this.results = [createVirtualElement('div', { attributes: {class: 'search-info hidden'}, children: ['Keep typing to search']})];
   		else if(search.length >= 3) {
   			this.results = [];
   			this.results = this.props.categories.map((category) =>{
@@ -634,41 +644,87 @@
   	}
   }
 
+  const page = (page, state) => {
+  	// console.log(page, state);
+  	if (!page) return createVirtualElement('main');
+  	else return createVirtualElement(page, {props: state});
+  };
+
+
   class App extends Component {
   	constructor(props) {
-  		super(props);
+  		super();
   		// Page
-  		this.state.hash = props.hash;
-  		this.state.page = props.page;
-
+  		this.state = props;
   		this.virtualElement = this.createVirtualComponent(this.props, this.state);
   		this.base = renderHTMLElement(this.virtualElement);
   	
   	}
 
-  	changePage([hash, page]){
-  		// changes the page and start diffing
-  		this.state.hash = hash;
-  		this.state.page = page;
+  	changePage(state){
+  		this.setState({});
+  		this.setState(state);
   		updateComponent(this);
   	}
 
   	createVirtualComponent(props, state){
+  		// console.log(props, state)
   		return createVirtualElement('div', {
   			attributes: { class: 'app' },
   			children: [
-  				createVirtualElement(Header)
+  				createVirtualElement(Header),
+  				page(state.page, {slug: state.slug})
   			]
   		});
   	}
   }
 
   class Home extends Component {
-  	createVirtualComponent(){
-  		return createVirtualElement('main', { 
-  			children: [
-  				// 
-  			]
+  	createVirtualComponent(props, state){
+  		return createVirtualElement('main', {
+  			attributes: {id: 'home', class: 'page'}
+  		});
+  	}
+  }
+
+  class Games extends Component {
+  	constructor(props) {
+  		super(props);
+  		this.state.gameData = [createVirtualElement('div', {children: ['loading...']})];
+  		// kick off api get
+  		this.getGameDetailData(this.props.slug);
+  	}
+
+  	getGameDetailData(slug) {
+  		// query api
+  		gameDetails(slug)
+  			.then((results) => {
+  				const title = createVirtualElement('h2', {children: [results.name]});
+  				const description = createVirtualElement('p',{children: [results.description_raw]} );
+  				// set state game data to results
+
+  				this.state.gameData = [
+  					title,
+  					description
+
+  				];
+
+  				updateComponent(this);
+  			});
+
+
+  		// update gamedate
+
+
+
+
+  	}
+
+
+  	createVirtualComponent(props, state){
+  		return createVirtualElement('main', {
+  			attributes: {id: 'games', class: 'page'},
+  			children: [ ...state.gameData ]
   		});
   	}
   }
@@ -680,8 +736,8 @@
 
   // Props for the app with default page(home)
   const props = {
-  	hash: 'Home',
-  	page: Home
+  	page: Home,
+  	slug: null
   };
 
   const app = new App(props); // Creates the app with the props
@@ -689,8 +745,11 @@
   render(app.base, document.body); // first time render (home is default state)
 
   routie({
-  	'home': () => app.changePage(['Home', Home]),
+  	'home': () => app.changePage({page: Home}),
+  	'games/:slug': (slug) =>app.changePage({page: Games, slug}) 
   });
+
+  // routie('home');
 
 })));
 //# sourceMappingURL=main.js.map
