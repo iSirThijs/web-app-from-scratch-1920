@@ -27,13 +27,12 @@ export default class Search extends Component {
 	}
 
 	getApiResults(props, state){
-		this.state.result = [createVirtualElement('div', {children: ['loading...']})];
 		rawgAPI.list('games', state.apiQuery)
 			.then((list) => list.results)
 			.then((results) => {
 				
 				let list = createVirtualElement('ul', {
-					children:  [
+					children: [
 						...results.map((result) => {
 							return createVirtualElement('li', {
 								children: [
@@ -59,9 +58,8 @@ export default class Search extends Component {
 			children: [ 
 				createVirtualElement('h2', {children: ['Advanced Search']}),
 				createVirtualElement(SearchForm, {props: {parent: this, value: state.apiQuery.search}}),
-				// search input //
-				// filter and sort controls/submit -> updates state of this(sent parent as prop)
-				...state.result // results (lazy loading needs to be added later)
+		
+				...state.result
 			]
 		});
 	}

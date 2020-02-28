@@ -11,7 +11,7 @@ export default class EasySearch extends Component {
 
 
 		// categories are the endpoint where you can search with a query
-		this.props.categories = ['games' ]; 
+		this.props.categories = ['games', 'tags', 'creators' ]; 
 		this.props.id = 'easy-search';
 		this.state.apiQuery = {
 			search: undefined,

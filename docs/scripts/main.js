@@ -509,7 +509,7 @@
 
   }
   /**
-   * Get a list of games/developers/creators/
+   * Get a details of games
    * @param {Stirng} [endpoint] - A stirng with the endpoint
    * @param {String[]} [params] - An array of string with search queries, without the results will be random
    * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
@@ -519,6 +519,17 @@
   	const gamesURL = new URL(`/api/games/${id}`, baseURL);
   	
   	return get(gamesURL);
+
+  }
+
+  /**
+   * Get a list of games/developers/creators/
+   * @returns {Promise<*>} - A resolved promise with the results of the query or an rejection with the error reason
+   */
+  function getPlatforms() {
+  	const platformURL = new URL('/api/platforms/lists/parents', baseURL);
+  	
+  	return get(platformURL);
 
   }
 
@@ -738,22 +749,55 @@
   			event.preventDefault();
   			let targets = Object.values(event.target);
 
-  			let search = targets.reduce((searchParams, target) => {
-  				if(target.name) searchParams[target.name] = target.value;
+  			let search = targets.reduce((searchParams, target, index, targetsArr) => {
+  				if(target.type === 'checkbox' && target.checked) {
+  					let oldValues = searchParams[target.name] || [];
+  					searchParams[target.name] = [target.value, ...oldValues];
+  				} else if(target.type === 'text' && target.name) searchParams[target.name] = target.value;
+
+  				if ( index + 1 == targetsArr.length) {
+  					for (let key in searchParams) {
+  						if(Array.isArray(searchParams[key])) searchParams[key] = searchParams[key].join(',');
+  					}
+  				}
+  				
   				return searchParams;
 
   			}, {});
-
   			props.parent.setApiQuery = search;
   		};
+  		this.state.filters = [];
+
+  		this.createFilters();
+  	}
+
+  	createFilters(){
+  		getPlatforms()
+  			.then((data) => data.results )
+  			.then((results) => {
+  				this.state.filters = [ createVirtualElement('ul', { children: [
+  					...results.map((result) => {
+  						return createVirtualElement('li', { children: [
+  							createVirtualElement('input', {attributes: {type: 'checkbox', name:'parent_platforms', id: result.slug, value: result.id, checked: true}}),
+  							createVirtualElement('label', {attributes: { for: result.slug }, children: [result.name]})
+  						]});
+  					})
+  				]})
+  				];
+  				updateComponent(this);
+  			});
+
+
   	}
 
   	createVirtualComponent(props, state) {
+
   		return createVirtualElement('form', {
   			events: {'submit': props.submit },
   			children: [
   				createVirtualElement('input', {attributes: {name: 'search', type: 'text', value: props.value}}),
-  				createVirtualElement('button', {attributes: {type: 'submit'}, children: ['Search']})
+  				...state.filters,
+  				createVirtualElement('button', {attributes: {type: 'submit'}, children: ['Search']}),
   			]
   		});
   	}
@@ -784,13 +828,12 @@
   	}
 
   	getApiResults(props, state){
-  		this.state.result = [createVirtualElement('div', {children: ['loading...']})];
   		list('games', state.apiQuery)
   			.then((list) => list.results)
   			.then((results) => {
   				
   				let list = createVirtualElement('ul', {
-  					children:  [
+  					children: [
   						...results.map((result) => {
   							return createVirtualElement('li', {
   								children: [
@@ -816,9 +859,8 @@
   			children: [ 
   				createVirtualElement('h2', {children: ['Advanced Search']}),
   				createVirtualElement(SearchForm, {props: {parent: this, value: state.apiQuery.search}}),
-  				// search input //
-  				// filter and sort controls/submit -> updates state of this(sent parent as prop)
-  				...state.result // results (lazy loading needs to be added later)
+  		
+  				...state.result
   			]
   		});
   	}

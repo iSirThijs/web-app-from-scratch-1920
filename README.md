@@ -1,5 +1,5 @@
 # Game Explorer
-<!-- Add a nice poster image here at the end of the week, showing off your shiny frontend 📸 -->
+![Preview](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/preview.png)
 
 This is a webapp to explore games. Search for a game and view details from it. Check its detail page for more info about the game and more
 
@@ -8,6 +8,8 @@ The app is a work in progress, but you can check it here: https://isirthijs.gith
 ## Features
 - Check details about a game like rating, stores
 - See if there is a reddit community
+- Search on developer or creator
+- find out where to buy it
 
 # Contents <!-- omit in toc -->
 - [Game Explorer](#game-explorer)
@@ -61,7 +63,9 @@ Run `npm run build` to run rollup and bundle th JS to `docs/scripts/app.js`
 # Data sources
 This project features from the game database [RAWG](https://rawg.io). It uses REST GET request with query parameters to obtain the data. 
 
-The return data look like this:
+The API is free to use for personal use and doesn't have any rate limits.
+
+The return data look like this and already has a good structure, there is not any need for transforming it:
 ```js
 {
   "count": 0,
@@ -93,10 +97,10 @@ The return data look like this:
 # App internals
 This is how the app works internally, made visual using two diagrams:
 ## Actor Diagram
-![Actor Diagram](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/actor-diagram-v2.png)
+![Actor Diagram](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/actor-diagram-v3.png)
 
 ## Interaction Diagram
-![Interaction Diagram](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/interaction-diagram.png)
+![Interaction Diagram](https://raw.githubusercontent.com/wiki/iSirThijs/web-app-from-scratch-1920/images/interaction-diagram-v2.png)
 
 # Dependencies
 * [Rollup](https://github.com/rollup/rollup)
@@ -109,7 +113,6 @@ This is how the app works internally, made visual using two diagrams:
   * [Create your own virtual dom to understand it(part 1)](https://medium.com/@aibolkussain/create-your-own-virtual-dom-to-understand-it-part-1-47b9b6fc6dfb)
   * [Create your own virtual dom to understand it(part 2)](https://medium.com/@aibolkussain/create-your-own-virtual-dom-to-understand-it-part-2-c85c4ffd15f0)
 
-* Setup rollup/serve/parallel with help from [Kris](https://github.com/kriskuiper)
 
 # License
 MIT License
